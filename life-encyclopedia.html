@@ -5,9 +5,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>生活常识百科 — 让每一天都更聪明</title>
-  <meta name="description" content="生活常识百科收集了6大分类36条实用生活小妙招，涵盖厨房、清洁、健康、节能、衣物、食材保鲜等场景，支持搜索和分类筛选。">
+  <meta name="description" content="生活常识百科收集了6大分类60条实用生活小妙招，涵盖厨房、清洁、健康、节能、衣物、食材保鲜等场景，支持搜索和分类筛选。">
   <meta property="og:title" content="生活常识百科 — 让每一天都更聪明">
-  <meta property="og:description" content="6大分类36条实用生活小妙招，厨房清洁、健康养生、节能环保、衣物护理、食材保鲜全覆盖。">
+  <meta property="og:description" content="6大分类60条实用生活小妙招，厨房清洁、健康养生、节能环保、衣物护理、食材保鲜全覆盖。">
   <meta property="og:image" content="https://2392480227h-rgb.github.io/life-encyclopedia/assets/hero-cover.jpg">
   <meta property="og:image:width" content="2560">
   <meta property="og:image:height" content="1440">
@@ -23,7 +23,7 @@
     "@type": "WebSite",
     "name": "生活常识百科",
     "url": "https://2392480227h-rgb.github.io/life-encyclopedia/",
-    "description": "6大分类36条实用生活小妙招，厨房清洁、健康养生、节能环保、衣物护理、食材保鲜全覆盖。",
+    "description": "6大分类60条实用生活小妙招，厨房清洁、健康养生、节能环保、衣物护理、食材保鲜全覆盖。",
     "potentialAction": {
       "@type": "SearchAction",
       "target": "https://2392480227h-rgb.github.io/life-encyclopedia/?q={search_term_string}",
@@ -46,6 +46,28 @@
       --radius: 16px;
       --shadow: 0 2px 12px rgba(61, 44, 44, 0.06);
       --shadow-hover: 0 8px 30px rgba(61, 44, 44, 0.10);
+      --overlay-bg: rgba(0,0,0,0.45);
+      --progress-bg: #e8d5c8;
+      --tag-bg: #fdf6f0;
+      --tag-hover: #f5e8dc;
+      --transition-speed: 0.3s;
+    }
+
+    /* Dark Mode */
+    body.dark {
+      --bg: #1a1a2e;
+      --bg2: #25253e;
+      --ink: #e0d6c8;
+      --muted: #9a8b7a;
+      --rule: #3a3050;
+      --accent: #f08a6d;
+      --accent2: #8fbf8f;
+      --shadow: 0 2px 12px rgba(0,0,0,0.2);
+      --shadow-hover: 0 8px 30px rgba(0,0,0,0.3);
+      --overlay-bg: rgba(0,0,0,0.7);
+      --progress-bg: #3a3050;
+      --tag-bg: #25253e;
+      --tag-hover: #2d2d4a;
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -56,6 +78,80 @@
       background: var(--bg);
       line-height: 1.7;
       -webkit-font-smoothing: antialiased;
+      transition: background var(--transition-speed), color var(--transition-speed);
+    }
+
+    /* ── Reading Progress Bar ── */
+    .progress-bar {
+      position: fixed;
+      top: 0; left: 0;
+      height: 3px;
+      background: var(--accent);
+      z-index: 200;
+      transition: width 0.1s linear;
+      box-shadow: 0 0 8px rgba(224,123,90,0.4);
+    }
+
+    /* ── Dark Mode Toggle ── */
+    .theme-toggle {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 150;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 2px solid var(--rule);
+      background: var(--bg2);
+      color: var(--ink);
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow);
+      transition: all 0.3s;
+      backdrop-filter: blur(10px);
+    }
+    .theme-toggle:hover {
+      transform: scale(1.1);
+      box-shadow: var(--shadow-hover);
+      border-color: var(--accent);
+    }
+
+    /* ── Back to Top ── */
+    .back-to-top {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      z-index: 150;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 2px solid var(--rule);
+      background: var(--bg2);
+      color: var(--accent);
+      font-size: 1.3rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(20px);
+      transition: all 0.3s;
+    }
+    .back-to-top.visible {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+    .back-to-top:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-hover);
+      background: var(--accent);
+      color: #fff;
     }
 
     /* ── Hero ── */
@@ -75,13 +171,23 @@
       height: 100%;
       object-fit: cover;
       filter: brightness(0.55);
+      transform: scale(1.05);
+      transition: transform 8s ease-out;
     }
+    .hero.loaded img { transform: scale(1); }
     .hero-overlay {
       position: relative;
       z-index: 1;
       text-align: center;
       color: #fff;
       padding: 2rem;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    .hero.loaded .hero-overlay {
+      opacity: 1;
+      transform: translateY(0);
     }
     .hero-overlay h1 {
       font-size: 3.2rem;
@@ -105,11 +211,13 @@
       z-index: 1;
       color: #fff;
       font-size: 0.85rem;
-      opacity: 0.75;
+      opacity: 0;
       animation: bob 2s ease-in-out infinite;
       cursor: pointer;
       text-decoration: none;
+      transition: opacity 0.5s ease 0.5s;
     }
+    .hero.loaded .hero-scroll { opacity: 0.75; }
     @keyframes bob {
       0%, 100% { transform: translateX(-50%) translateY(0); }
       50% { transform: translateX(-50%) translateY(8px); }
@@ -131,6 +239,7 @@
       box-shadow: var(--shadow-hover);
       padding: 0.25rem 0.25rem 0.25rem 1.5rem;
       gap: 0.5rem;
+      transition: background var(--transition-speed), box-shadow var(--transition-speed);
     }
     .search-wrap input {
       flex: 1;
@@ -198,10 +307,17 @@
       overflow: hidden;
       box-shadow: var(--shadow);
       cursor: pointer;
-      transition: transform 0.25s, box-shadow 0.25s;
+      transition: transform 0.25s, box-shadow 0.25s, opacity 0.5s, background var(--transition-speed);
       position: relative;
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    .cat-card.revealed {
+      opacity: 1;
+      transform: translateY(0);
     }
     .cat-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-hover); }
+    .cat-card.revealed:hover { transform: translateY(-4px); }
     .cat-card.hidden { display: none; }
     .cat-card-img {
       width: 100%;
@@ -237,7 +353,7 @@
     .detail-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.45);
+      background: var(--overlay-bg);
       z-index: 100;
       display: flex;
       align-items: center;
@@ -258,6 +374,7 @@
       box-shadow: 0 20px 60px rgba(0,0,0,0.2);
       padding: 2rem;
       position: relative;
+      transition: background var(--transition-speed);
     }
     .detail-panel .close-btn {
       position: absolute;
@@ -291,12 +408,12 @@
       margin-bottom: 1.5rem;
     }
     .tip-item {
-      background: var(--bg);
+      background: var(--tag-bg);
       border-radius: 10px;
       padding: 1.2rem 1.3rem;
       margin-bottom: 0.9rem;
       border-left: 4px solid var(--accent2);
-      transition: transform 0.15s, box-shadow 0.15s;
+      transition: transform 0.15s, box-shadow 0.15s, background var(--transition-speed);
     }
     .tip-item:hover { transform: translateX(4px); box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
     .tip-item h4 {
@@ -386,7 +503,7 @@
       padding: 1.2rem 1.3rem;
       box-shadow: var(--shadow);
       cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
+      transition: transform 0.2s, box-shadow 0.2s, background var(--transition-speed);
       border-left: 3px solid var(--accent);
       text-decoration: none;
       display: block;
@@ -439,6 +556,40 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    /* ── Share Button ── */
+    .share-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.5rem 1.2rem;
+      border-radius: 50px;
+      border: 1.5px solid var(--rule);
+      background: var(--bg2);
+      color: var(--ink);
+      font-family: var(--font);
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 1rem;
+    }
+    .share-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .share-toast {
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--ink);
+      color: var(--bg);
+      padding: 0.6rem 1.5rem;
+      border-radius: 50px;
+      font-size: 0.9rem;
+      font-family: var(--font);
+      z-index: 200;
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .share-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
     @media (max-width: 600px) {
       .web-results-grid { grid-template-columns: 1fr; }
     }
@@ -458,27 +609,41 @@
       .search-wrap input { width: 100%; }
       .search-wrap button { width: 100%; }
       .detail-panel { padding: 1.5rem; }
+      .theme-toggle { top: 10px; right: 10px; width: 36px; height: 36px; font-size: 1rem; }
+      .back-to-top { bottom: 20px; right: 20px; width: 36px; height: 36px; font-size: 1rem; }
     }
   </style>
 </head>
 <body>
 
+  <!-- ═══ Progress Bar ═══ -->
+  <div class="progress-bar" id="progressBar"></div>
+
+  <!-- ═══ Theme Toggle ═══ -->
+  <button class="theme-toggle" id="themeToggle" title="切换深色/浅色模式" aria-label="切换深色/浅色模式">🌓</button>
+
+  <!-- ═══ Back to Top ═══ -->
+  <button class="back-to-top" id="backToTop" title="返回顶部" aria-label="返回顶部">&#9650;</button>
+
+  <!-- ═══ Share Toast ═══ -->
+  <div class="share-toast" id="shareToast">链接已复制，快去分享吧～</div>
+
   <!-- Hidden text content for search engines and crawlers -->
   <noscript>
     <div>
       <h1>生活常识百科 — 让每一天都更聪明</h1>
-      <p>6大分类36条实用生活小妙招，涵盖厨房妙招、清洁收纳、健康养生、节能环保、衣物护理、食材保鲜。</p>
-      <h2>厨房妙招</h2><p>快速剥蒜皮、切洋葱不流泪、煮饭加几滴油、微波炉快速清洁、判断鸡蛋新鲜度、防止菜刀生锈</p>
-      <h2>清洁收纳</h2><p>白醋除水垢、小苏打去油污、冰箱除异味、玻璃清洁不流水痕、地毯污渍急救、衣柜收纳翻倍</p>
-      <h2>健康养生</h2><p>最佳喝水时间、改善睡眠质量、久坐拉伸操、眼睛疲劳缓解、感冒初期自救、泡脚的黄金时间</p>
-      <h2>节能环保</h2><p>空调省电秘籍、冰箱省电技巧、待机也是耗电、洗衣机节水法、LED灯省电、煮饭省气妙招</p>
-      <h2>衣物护理</h2><p>毛衣防缩水、白衣发黄急救、拉链顺滑妙招、羽绒服清洗指南、真丝护理、去除火锅味</p>
-      <h2>食材保鲜</h2><p>绿叶菜保鲜、香蕉不黑妙招、肉类分装冷冻、面包防干硬、土豆防发芽、干货防潮防虫</p>
+      <p>6大分类60条实用生活小妙招，涵盖厨房妙招、清洁收纳、健康养生、节能环保、衣物护理、食材保鲜。</p>
+      <h2>厨房妙招</h2><p>快速剥蒜皮、切洋葱不流泪、煮饭加几滴油、微波炉快速清洁、判断鸡蛋新鲜度、防止菜刀生锈、去除手上腥味、煮面不溢锅、快速解冻肉、让隔夜饭变香</p>
+      <h2>清洁收纳</h2><p>白醋除水垢、小苏打去油污、冰箱除异味、玻璃清洁不流水痕、地毯污渍急救、衣柜收纳翻倍、马桶清洁、纱窗除尘、银饰变亮、下水道疏通</p>
+      <h2>健康养生</h2><p>最佳喝水时间、改善睡眠质量、久坐拉伸操、眼睛疲劳缓解、感冒初期自救、泡脚的黄金时间、缓解落枕、缓解口腔溃疡、预防晕车、缓解打嗝</p>
+      <h2>节能环保</h2><p>空调省电秘籍、冰箱省电技巧、待机也是耗电、洗衣机节水法、LED灯省电、煮饭省气妙招、电热水器省电、手机充电省电、窗帘节能法、水龙头节水</p>
+      <h2>衣物护理</h2><p>毛衣防缩水、白衣发黄急救、拉链顺滑妙招、羽绒服清洗指南、真丝护理、去除火锅味、去除衣服起球、牛仔裤固色、去除领口汗渍、鞋子除臭</p>
+      <h2>食材保鲜</h2><p>绿叶菜保鲜、香蕉不黑妙招、肉类分装冷冻、面包防干硬、土豆防发芽、干货防潮防虫、鸡蛋保鲜方向、豆腐保鲜、防止苹果氧化、蘑菇保鲜</p>
     </div>
   </noscript>
 
   <!-- ═══ Hero ═══ -->
-  <section class="hero">
+  <section class="hero" id="hero">
     <img src="assets/hero-cover.jpg" alt="温馨生活场景">
     <div class="hero-overlay">
       <h1>生活常识百科</h1>
@@ -509,9 +674,9 @@
   <!-- ═══ Category Grid ═══ -->
   <section class="categories" id="catGrid">
     <!-- 1. Kitchen -->
-    <div class="cat-card" data-cat="kitchen" data-keywords="厨房 做饭 烹饪 锅 菜刀 油渍 切洋葱 煮饭 微波炉 鸡蛋">
+    <div class="cat-card" data-cat="kitchen" data-keywords="厨房 做饭 烹饪 锅 菜刀 油渍 切洋葱 煮饭 微波炉 鸡蛋 解冻 隔夜饭 腥味 溢锅 蒜皮 面条 蒸">
       <img class="cat-card-img" src="assets/cat-kitchen.jpg" alt="厨房妙招" loading="lazy">
-      <span class="cat-card-badge">6 招</span>
+      <span class="cat-card-badge">10 招</span>
       <div class="cat-card-body">
         <h3>🍳 厨房妙招</h3>
         <p class="cat-count">让烹饪变得更轻松</p>
@@ -519,9 +684,9 @@
     </div>
 
     <!-- 2. Clean -->
-    <div class="cat-card" data-cat="clean" data-keywords="清洁 打扫 收纳 去渍 除味 卫生间 玻璃 地毯 水垢 霉菌">
+    <div class="cat-card" data-cat="clean" data-keywords="清洁 打扫 收纳 去渍 除味 卫生间 玻璃 地毯 水垢 霉菌 马桶 纱窗 银饰 下水道 疏通 衣柜">
       <img class="cat-card-img" src="assets/cat-clean.jpg" alt="清洁收纳" loading="lazy">
-      <span class="cat-card-badge">6 招</span>
+      <span class="cat-card-badge">10 招</span>
       <div class="cat-card-body">
         <h3>🧹 清洁收纳</h3>
         <p class="cat-count">让家里一尘不染</p>
@@ -529,9 +694,9 @@
     </div>
 
     <!-- 3. Health -->
-    <div class="cat-card" data-cat="health" data-keywords="健康 养生 睡眠 喝水 运动 颈椎 眼睛 感冒 头痛 泡脚">
+    <div class="cat-card" data-cat="health" data-keywords="健康 养生 睡眠 喝水 运动 颈椎 眼睛 感冒 头痛 泡脚 落枕 口腔溃疡 晕车 打嗝 拉伸 护眼 呼吸 生姜">
       <img class="cat-card-img" src="assets/cat-health.jpg" alt="健康养生" loading="lazy">
-      <span class="cat-card-badge">6 招</span>
+      <span class="cat-card-badge">10 招</span>
       <div class="cat-card-body">
         <h3>💚 健康养生</h3>
         <p class="cat-count">呵护身体每一天</p>
@@ -539,9 +704,9 @@
     </div>
 
     <!-- 4. Energy -->
-    <div class="cat-card" data-cat="energy" data-keywords="节能 省电 省水 电费 空调 冰箱 待机 环保 暖气 太阳能">
+    <div class="cat-card" data-cat="energy" data-keywords="节能 省电 省水 电费 空调 冰箱 待机 环保 暖气 太阳能 热水器 充电 窗帘 水龙头 节水 燃气 LED">
       <img class="cat-card-img" src="assets/cat-energy.jpg" alt="节能环保" loading="lazy">
-      <span class="cat-card-badge">6 招</span>
+      <span class="cat-card-badge">10 招</span>
       <div class="cat-card-body">
         <h3>💡 节能环保</h3>
         <p class="cat-count">省钱又爱护地球</p>
@@ -549,9 +714,9 @@
     </div>
 
     <!-- 5. Clothing -->
-    <div class="cat-card" data-cat="clothing" data-keywords="衣物 洗衣 晾晒 熨烫 去污 毛衣 真丝 皮革 羽绒服 收纳">
+    <div class="cat-card" data-cat="clothing" data-keywords="衣物 洗衣 晾晒 熨烫 去污 毛衣 真丝 皮革 羽绒服 收纳 起球 牛仔裤 汗渍 鞋子 除臭 火锅 拉链 固色">
       <img class="cat-card-img" src="assets/cat-clothing.jpg" alt="衣物护理" loading="lazy">
-      <span class="cat-card-badge">6 招</span>
+      <span class="cat-card-badge">10 招</span>
       <div class="cat-card-body">
         <h3>👕 衣物护理</h3>
         <p class="cat-count">让衣物持久如新</p>
@@ -559,9 +724,9 @@
     </div>
 
     <!-- 6. Food -->
-    <div class="cat-card" data-cat="food" data-keywords="食材 保鲜 冰箱 蔬菜 水果 肉类 冷藏 冷冻 剩菜 防潮">
+    <div class="cat-card" data-cat="food" data-keywords="食材 保鲜 冰箱 蔬菜 水果 肉类 冷藏 冷冻 剩菜 防潮 鸡蛋 豆腐 苹果 蘑菇 香蕉 土豆 绿叶菜 面包 干货">
       <img class="cat-card-img" src="assets/cat-food.jpg" alt="食材保鲜" loading="lazy">
-      <span class="cat-card-badge">6 招</span>
+      <span class="cat-card-badge">10 招</span>
       <div class="cat-card-body">
         <h3>🥬 食材保鲜</h3>
         <p class="cat-count">让食材新鲜更持久</p>
@@ -593,9 +758,10 @@
   <!-- ═══ Footer ═══ -->
   <footer>
     <div class="divider"></div>
-    <p>生活常识百科 · 让每一天都更聪明</p>
+    <p>生活常识百科 · 让每一天都更聪明 · 60条实用妙招</p>
+    <button class="share-btn" id="shareBtn">📋 分享本站</button>
     <div class="sitemap" style="max-width:1100px;margin:1.5rem auto 0;padding:0 1.5rem;font-size:0.8rem;color:var(--muted);text-align:left;line-height:2">
-      <strong style="color:var(--ink)">全部妙招：</strong>
+      <strong style="color:var(--ink)">全部分类：</strong>
       <a href="?cat=kitchen" style="color:var(--accent);text-decoration:none">厨房妙招</a> · 
       <a href="?cat=clean" style="color:var(--accent);text-decoration:none">清洁收纳</a> · 
       <a href="?cat=health" style="color:var(--accent);text-decoration:none">健康养生</a> · 
@@ -606,7 +772,7 @@
   </footer>
 
   <script>
-    // ── Tip Data ──
+    // ── Tip Data (10 per category, 60 total) ──
     const tipData = {
       kitchen: {
         title: '🍳 厨房妙招',
@@ -618,7 +784,11 @@
           { title: '煮饭加几滴油', tag: '口感', text: '煮米饭时滴入几滴食用油和少许白醋（每杯米加半茶匙），米饭粒粒分明、晶莹剔透，还不会粘锅。' },
           { title: '微波炉快速清洁', tag: '清洁', text: '在微波炉里放一碗水加几片柠檬，高火加热 3 分钟，蒸汽会软化内壁油污，用抹布轻轻一擦就干净。' },
           { title: '判断鸡蛋新鲜度', tag: '挑选', text: '把鸡蛋放进一杯水里：沉底平躺的是新鲜蛋；一端翘起的是放了 1-2 周的；浮在水面的已经变质，不要食用。' },
-          { title: '防止菜刀生锈', tag: '保养', text: '每次用完菜刀洗净擦干后，用生姜片擦拭刀面，姜汁形成的保护膜能有效防锈，还能去除异味。' }
+          { title: '防止菜刀生锈', tag: '保养', text: '每次用完菜刀洗净擦干后，用生姜片擦拭刀面，姜汁形成的保护膜能有效防锈，还能去除异味。' },
+          { title: '去除手上腥味', tag: '去味', text: '处理鱼虾后手上残留腥味？用不锈钢肥皂或普通不锈钢勺子在流水下搓洗双手 30 秒，腥味分子会与不锈钢反应而被中和。' },
+          { title: '煮面不溢锅', tag: '省心', text: '煮面条或粥时，在锅沿横放一根木勺或筷子，沸腾的泡沫碰到就会破裂，绝对不会溢锅，无需守在旁边盯火。' },
+          { title: '快速解冻肉', tag: '解冻', text: '把冷冻肉夹在两个铝锅底或铝箔之间，铝的导热性极好，解冻速度比室温自然解冻快 3 倍，且肉质不受影响。' },
+          { title: '让隔夜饭变香', tag: '回温', text: '隔夜米饭撒少许水，放入微波炉加热时在转盘旁边放一小杯水，蒸汽环境让米饭恢复松软，口感接近新鲜米饭。' }
         ]
       },
       clean: {
@@ -631,7 +801,11 @@
           { title: '冰箱除异味', tag: '除味', text: '把用过的茶叶渣晒干，用纱布包好放进冰箱角落，吸附异味效果一流。或者放一卷卫生纸，也能吸收潮气和异味。' },
           { title: '玻璃清洁不流水痕', tag: '玻璃', text: '用旧报纸擦玻璃比抹布效果好得多！报纸上的油墨能吸附污渍，而且不会留下纤维和水痕，窗户透亮如新。' },
           { title: '地毯污渍急救', tag: '去渍', text: '红酒洒在地毯上别慌，立刻撒上大量食盐覆盖污渍，盐会吸收液体。等干了之后吸尘器吸走盐粒，再用小苏打水擦拭残留。' },
-          { title: '衣柜收纳翻倍', tag: '收纳', text: '把衣服竖着放而不是叠着放，像书架一样排列，一目了然且拿取方便。用鞋盒盖当抽屉分隔板，零成本实现分区收纳。' }
+          { title: '衣柜收纳翻倍', tag: '收纳', text: '把衣服竖着放而不是叠着放，像书架一样排列，一目了然且拿取方便。用鞋盒盖当抽屉分隔板，零成本实现分区收纳。' },
+          { title: '马桶清洁妙招', tag: '卫浴', text: '可乐倒进马桶浸泡 1 小时再刷洗，磷酸能溶解顽固尿垢。或者倒入小苏打+白醋，滋滋起泡后静置 15 分钟，除垢除菌一步到位。' },
+          { title: '纱窗除尘', tag: '门窗', text: '旧报纸用胶带贴在纱窗外面，室内用吸尘器对着纱窗吸，灰尘全被报纸挡住不会飞散到室内，5 分钟完成整个纱窗清洁。' },
+          { title: '银饰变亮', tag: '饰品', text: '碗里铺一层锡纸，放上发黑的银饰，撒一勺小苏打，倒入热水，几分钟后银饰恢复光泽。这是利用氧化还原反应，安全不伤银饰。' },
+          { title: '下水道疏通', tag: '管道', text: '先倒半杯小苏打粉，再倒半杯白醋，立刻盖住下水口等 15 分钟，让泡沫充分分解油脂，最后用一壶热水冲，管道恢复通畅。' }
         ]
       },
       health: {
@@ -644,7 +818,11 @@
           { title: '久坐拉伸操', tag: '运动', text: '每坐 45 分钟就站起来活动 3 分钟。双手抱头向后仰，拉伸胸椎；左右转头各 10 秒；双手在背后交握上抬，缓解肩颈僵硬。' },
           { title: '眼睛疲劳缓解', tag: '护眼', text: '遵循 20-20-20 法则：每看屏幕 20 分钟，看 20 英尺（约 6 米）以外的物体 20 秒。热敷眼睛 5 分钟能促进眼周血液循环。' },
           { title: '感冒初期自救', tag: '感冒', text: '刚感觉嗓子痒、要感冒时，立刻用温盐水漱口漱喉咙，每天 3-4 次。生姜红糖水趁热喝，然后盖被子微微发汗，往往能把感冒压下去。' },
-          { title: '泡脚的黄金时间', tag: '养生', text: '晚上 9 点左右泡脚效果最好，水温 40-45°C，泡 15-20 分钟至微微出汗。加入艾草或生姜片，驱寒除湿效果加倍。饭后一小时内不要泡。' }
+          { title: '泡脚的黄金时间', tag: '养生', text: '晚上 9 点左右泡脚效果最好，水温 40-45°C，泡 15-20 分钟至微微出汗。加入艾草或生姜片，驱寒除湿效果加倍。饭后一小时内不要泡。' },
+          { title: '缓解落枕', tag: '急救', text: '用吹风机热风对着颈部疼痛部位吹 5-10 分钟，同时缓慢转动脖子。热敷加轻柔活动能放松痉挛肌肉，比硬扛着等恢复快得多。' },
+          { title: '缓解口腔溃疡', tag: '口腔', text: '用棉签蘸蜂蜜涂在溃疡处，形成保护膜隔离刺激，蜂蜜有天然抗菌作用。或用温盐水漱口每天 3-4 次，加速愈合。' },
+          { title: '预防晕车', tag: '出行', text: '上车前半小时切一片新鲜生姜贴在肚脐上，用创可贴固定。生姜中的姜辣素能抑制恶心和呕吐感，比吃药更天然无副作用。' },
+          { title: '快速止打嗝', tag: '小窍门', text: '深吸一口气，憋住气的同时捏住鼻子，坚持尽可能长的时间。体内 CO₂ 浓度升高会抑制膈肌痉挛，一次就能止住大部分打嗝。' }
         ]
       },
       energy: {
@@ -657,7 +835,11 @@
           { title: '待机也是耗电', tag: '待机', text: '电视、机顶盒、电脑等电器待机状态下仍在耗电，一台电视待机一年可能浪费 30-50 度电。不用时拔掉插头或使用带开关的插线板。' },
           { title: '洗衣机节水法', tag: '节水', text: '衣服攒到七八分满再洗，选择合适水位。不太脏的衣服用快洗模式，省水省电。洗衣水可以收集起来冲厕所或拖地，一水多用。' },
           { title: 'LED 灯省电', tag: '照明', text: '把家里的白炽灯换成 LED 灯，同样亮度下耗电只有 1/10，寿命长 25 倍。养成随手关灯的习惯，一年能省下不少电费。' },
-          { title: '煮饭省气妙招', tag: '燃气', text: '煮面条、饺子时，水开后转中小火保持微沸即可，大火翻滚只会浪费燃气。用高压锅炖肉比普通锅省气 50% 以上，时间也缩短一半。' }
+          { title: '煮饭省气妙招', tag: '燃气', text: '煮面条、饺子时，水开后转中小火保持微沸即可，大火翻滚只会浪费燃气。用高压锅炖肉比普通锅省气 50% 以上，时间也缩短一半。' },
+          { title: '电热水器省电', tag: '热水', text: '夏天水温调低到 40-45°C，冬天 50-55°C 就够了。长时间不用时关掉电源，比一直保温模式省电 30% 以上。定期清理内胆水垢提升效率。' },
+          { title: '手机充电省电', tag: '充电', text: '手机充满电后及时拔掉充电器，充电器空载也在耗电（待机功耗约 0.3W）。用原装充电器充电效率最高，劣质充电器损耗大且危险。' },
+          { title: '窗帘节能法', tag: '窗户', text: '冬天白天拉开窗帘让阳光进来免费取暖，晚上拉上保温。夏天相反，白天拉上窗帘阻挡热量，能减少空调负荷 15%-25%。' },
+          { title: '水龙头节水', tag: '水龙头', text: '给水龙头装上起泡器（几十元一个），水流中混入空气，手感一样但实际水量减少 30%-50%。洗手打肥皂时关掉水龙头，不浪费每一滴水。' }
         ]
       },
       clothing: {
@@ -670,7 +852,11 @@
           { title: '拉链顺滑妙招', tag: '修复', text: '拉链卡顿不顺滑？用蜡烛或肥皂在拉链齿上来回涂抹几下，蜡质起到润滑作用，拉链立刻顺滑如新。' },
           { title: '羽绒服清洗指南', tag: '羽绒', text: '羽绒服尽量少洗，局部污渍用湿布蘸中性洗涤剂轻擦。必须机洗时选羽绒服模式，加两三个网球一起洗，拍打防止羽绒结块。' },
           { title: '真丝护理', tag: '真丝', text: '真丝衣物必须手洗，用冷水加专用丝毛洗涤剂，轻轻漂洗。绝对不能拧干，用大毛巾卷起来吸走水分，阴凉处晾干，避免阳光直射。' },
-          { title: '去除火锅味', tag: '除味', text: '吃完火锅衣服上全是味道？把衣服挂在浴室，开热水让蒸汽弥漫 10 分钟，水蒸气会带走异味分子。或者喷一层薄薄的柠檬水，晾干后味道消失。' }
+          { title: '去除火锅味', tag: '除味', text: '吃完火锅衣服上全是味道？把衣服挂在浴室，开热水让蒸汽弥漫 10 分钟，水蒸气会带走异味分子。或者喷一层薄薄的柠檬水，晾干后味道消失。' },
+          { title: '去除衣服起球', tag: '起球', text: '用一次性剃须刀轻轻刮过起球表面，毛球轻松去除，比专用去球器还方便。或者用宽透明胶带粘走毛球，不伤衣物面料。' },
+          { title: '牛仔裤固色', tag: '固色', text: '新牛仔裤第一次洗时在水里加一勺盐（一盆水一勺盐），浸泡 30 分钟再正常洗涤。盐能锁住靛蓝色素，减少掉色，颜色持久如新。' },
+          { title: '去除领口汗渍', tag: '汗渍', text: '洗发水涂在领口发黄处，搓揉后静置 10 分钟再洗。洗发水是专门分解人体皮脂和汗渍的，比普通洗衣液效果更好，白色衣物尤其适用。' },
+          { title: '鞋子除臭', tag: '除臭', text: '把小苏打装进旧袜子或茶包袋里，打结后塞进鞋子里过夜，吸湿除臭双效合一。干茶叶包也可以替代，还有淡淡的茶香。' }
         ]
       },
       food: {
@@ -683,7 +869,11 @@
           { title: '肉类分装冷冻', tag: '肉类', text: '买回来的肉按每次用量分装，压扁排出空气再冷冻，解冻更快。在保鲜袋上标注日期和种类，先进先出，避免冻了半年找不到。' },
           { title: '面包防干硬', tag: '面食', text: '面包不要放冷藏！冷藏温度（4°C）会加速淀粉老化，面包反而变干硬。吃不完的面包密封后冷冻，吃的时候烤箱复烤 5 分钟，恢复酥脆。' },
           { title: '土豆防发芽', tag: '根茎', text: '土豆和苹果放在一起储存，苹果释放的乙烯气体能抑制土豆发芽。放在阴凉通风处，避免阳光直射，不要和洋葱放一起，互相催熟。' },
-          { title: '干货防潮防虫', tag: '干货', text: '干香菇、木耳、红枣等干货，密封后放冰箱冷藏保存。放几颗干辣椒或花椒在里面，天然防虫。硅胶干燥剂（食品级）放一包，吸潮效果很好。' }
+          { title: '干货防潮防虫', tag: '干货', text: '干香菇、木耳、红枣等干货，密封后放冰箱冷藏保存。放几颗干辣椒或花椒在里面，天然防虫。食品级硅胶干燥剂放一包，吸潮效果很好。' },
+          { title: '鸡蛋保鲜方向', tag: '鸡蛋', text: '鸡蛋放冰箱时大头朝上放置，蛋黄悬浮在中间不会贴壳，保鲜更久。鸡蛋壳表面有天然保护膜，吃之前再洗，不要洗了再放冰箱。' },
+          { title: '豆腐保鲜', tag: '豆制品', text: '豆腐放保鲜盒里，加凉开水完全没过豆腐，每天换一次水，能在冰箱保存 3-5 天不变酸。换水是关键，不能偷懒。' },
+          { title: '防止苹果氧化', tag: '水果', text: '切开的苹果用橡皮筋把几瓣重新绑在一起恢复原形，减少接触空气的面积。或者泡淡盐水 3 分钟捞出沥干，抗氧化效果显著。' },
+          { title: '蘑菇保鲜', tag: '菌菇', text: '蘑菇用纸袋装不要用塑料袋！纸袋透气能防止蘑菇出水变黏。放冰箱前不要清洗，吃之前再洗，否则沾水后极易变质。' }
         ]
       }
     };
@@ -699,9 +889,85 @@
     const webResultsSection = document.getElementById('webResultsSection');
     const webResultsGrid = document.getElementById('webResultsGrid');
     const searchLoading = document.getElementById('searchLoading');
+    const progressBar = document.getElementById('progressBar');
+    const backToTopBtn = document.getElementById('backToTop');
+    const themeToggle = document.getElementById('themeToggle');
+    const hero = document.getElementById('hero');
+    const shareBtn = document.getElementById('shareBtn');
+    const shareToast = document.getElementById('shareToast');
 
     let activeFilter = 'all';
     let searchDebounce = null;
+
+    // ── Hero Animation ──
+    window.addEventListener('load', () => {
+      setTimeout(() => hero.classList.add('loaded'), 100);
+    });
+
+    // ── Card Entrance Animation ──
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry, i) => {
+        if (entry.isIntersecting) {
+          setTimeout(() => entry.target.classList.add('revealed'), i * 60);
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -30px 0px' });
+
+    document.querySelectorAll('.cat-card').forEach(card => observer.observe(card));
+
+    // ── Reading Progress Bar ──
+    window.addEventListener('scroll', () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+      progressBar.style.width = progress + '%';
+
+      // Back to top visibility
+      if (scrollTop > 400) {
+        backToTopBtn.classList.add('visible');
+      } else {
+        backToTopBtn.classList.remove('visible');
+      }
+    });
+
+    // ── Back to Top ──
+    backToTopBtn.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // ── Dark Mode Toggle ──
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+      document.body.classList.add('dark');
+      themeToggle.textContent = '☀️';
+    }
+
+    themeToggle.addEventListener('click', () => {
+      const isDark = document.body.classList.toggle('dark');
+      themeToggle.textContent = isDark ? '☀️' : '🌓';
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    });
+
+    // ── Share Button ──
+    shareBtn.addEventListener('click', async () => {
+      const url = window.location.href;
+      try {
+        await navigator.clipboard.writeText(url);
+      } catch (e) {
+        // Fallback
+        const ta = document.createElement('textarea');
+        ta.value = url;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+      shareToast.classList.add('show');
+      setTimeout(() => shareToast.classList.remove('show'), 2000);
+    });
 
     // ── Filter Tags ──
     filterTags.addEventListener('click', (e) => {
@@ -736,7 +1002,7 @@
 
       noResults.classList.toggle('show', visibleCount === 0);
 
-      // 触发联网搜索（防抖 500ms）
+      // Trigger web search (debounced)
       if (query && query.length >= 1) {
         clearTimeout(searchDebounce);
         searchDebounce = setTimeout(() => webSearch(query), 500);
@@ -745,22 +1011,20 @@
       }
     }
 
-    // ── Web Search Cache (embedded for offline support) ──
-    const searchCache = {"厨房":[{"title":"厨房去油污10种小方法，很实用建议收藏","body":"小苏打+少量水调成糊状，涂抹油污处静置15分钟，用旧牙刷擦洗。顽固油垢可加少量盐增加摩擦力，最后用热毛巾擦净。白醋和水按1:1比例装入喷壶，均匀喷在撒了小苏打的地方，滋滋冒泡起反应后油污自然分解。","href":"http://m.toutiao.com/group/7501587313773691442/"},{"title":"家政阿姨酒后真言：5个清洁秘方从不外传","body":"小苏打+白醋是最强CP组合拳。先撒干爽小苏打粉覆盖油污，再将白醋和水1:1喷在上面，看到「火山爆发」现象后静置，油污轻松擦掉。洗洁精和温水按1:10稀释喷洒，静置3-5分钟再擦拭。","href":"https://c.m.163.com/news/a/K8AM64L805448Z8F.html"},{"title":"厨房油渍快速清理术","body":"玻璃灶台避免使用硬质清洁工具刮擦。使用专用玻璃清洁剂或小苏打糊，用海绵软面擦拭，最后用干净的鱼鳞布擦干，可避免水痕。每次做完饭后趁灶台余温用湿抹布快速擦拭一遍，能极大减轻日后清洁负担。","href":"https://post.smzdm.com/p/adow2kpn"},{"title":"厨房清洁别再瞎忙活！4个常见误区坑了很多人","body":"先把洗洁精和温水按1:10的比例稀释装在喷瓶里，对着油污处喷洒，静置3-5分钟让表面活性剂分解油污，再用百洁布软面擦拭。老油污可在喷洒后铺一层湿纸巾，让油污充分软化，清洁效率更高。","href":"https://www.sohu.com/a/955715988_122566611"}],"冰箱":[{"title":"冰箱总串味？这样布局+清洁才真正管用","body":"活性炭包放置于冷藏室中层及冷冻室角落，每2周取出暴晒4小时恢复吸附能力。咖啡渣或茶叶梗必须使用干燥状态并装入带透气孔的密封容器，置于门架或抽屉内，3天内更换避免受潮发霉。","href":"https://post.m.smzdm.com/p/a4q787dl/"},{"title":"教您如何快速清除冰箱异味","body":"小苏打是最推荐的性价比之王，去味+吸潮气，无毒无残留。准备3-5勺小苏打放在广口容器中置于冰箱角落。活性炭、白醋、柠檬柚子皮也有效，效果排序：活性炭≈小苏打>白醋>柠檬皮。","href":"https://k.sina.cn/article_7879777110_1d5abdb5601901uszw.html"},{"title":"冰箱清洗与除味全攻略：30分钟搞定半年无异味","body":"用软布蘸取小苏打温水溶液（2-3勺小苏打兑500ml温水）擦拭内胆。密封条用棉签蘸白醋深入褶皱擦拭霉斑。排水孔用细管刷清理，避免堵塞产生异味。","href":"https://post.m.smzdm.com/p/a504554x/"},{"title":"冰箱日常清洁除味高效实用方法","body":"在冰箱角落放置广口容器装的小苏打，它能与酸性、碱性异味物质反应从而吸附气味。活性炭用透气布袋装炭包效果更持久。晒干的茶叶、柚子皮、橘子皮也可替代，需每隔3天更换。","href":"https://k.sina.cn/article_7879923742_1d5ae181e06801i0bg.html"}],"健康":[{"title":"2026年好好养自己！这8个变年轻习惯你知道吗","body":"每天靠墙站10分钟，挺拔体态自然来。这不仅仅是一个姿势，更是一种反重力的全身肌肉训练，持续标准站立1分钟就可以有效消耗热量。对于轻微驼背，靠墙站立是不错的矫正方法。","href":"https://app.people.cn/h5/detail/normal/6645194493969408"},{"title":"健康科普小知识","body":"每天喝1500-2000ml白开水少量多次。少喝奶茶、碳酸饮料、含糖饮品。三餐规律，早餐一定要吃。每天蔬菜500克以上，深色蔬菜占一半。每天水果200-350克，果汁不能替代鲜果。","href":"https://www.yantai.gov.cn/col/col85630/art/2026/art_e70fa7519e4f4443a71624693d4e7b09.html"},{"title":"这份健康长寿生活小贴士请收好","body":"睡前不宜过度用脑、不宜剧烈运动、不宜看手机。入睡前2小时内不要锻炼，运动后大脑皮层兴奋度高，短时间难以入睡。睡前远离手机屏幕，蓝光会抑制褪黑素分泌影响睡眠质量。","href":"http://www.chinanews.com.cn/jk/2025/08-20/10467875.shtml"},{"title":"三伏天老年人注意事项：医生提醒这5件事不要做","body":"不要因为怕起夜就少喝水，即使不渴也要每天少量多次喝2000毫升温开水，出汗多时还要适当增加饮水量，降低血液黏稠度预防血栓形成。不要自行增减药量。","href":"http://m.toutiao.com/group/7669291149110067753/"}],"省电":[{"title":"今夏全场景省电攻略请收好！","body":"夏季空调设置在26℃左右最适宜，每调高1℃可省电7%-10%。室内外温差控制在5-8℃最舒适又省电。配合风扇使用，空调温度可设高2-3℃，体感温度一样但耗电明显降低。","href":"https://m.thepaper.cn/newsDetail_forward_33547975"},{"title":"炎夏电费噌噌涨？收好这份官方节能清单","body":"将空调温度设置在26℃-28℃之间，每调高1℃空调能耗可降低约7%-10%。巧妙利用冷空气下沉原理，空调风向朝上让冷气均匀分布。定期清洗滤网，灰尘堵塞会让耗电量增加10%-20%。","href":"https://tidenews.com.cn/news.html?id=3167528"},{"title":"90%家庭都搞错的省电习惯！每月白白多交一半电费","body":"冰箱存放70%-80%是黄金比例，既保留蓄冷物体又留出冷气循环通道。冷藏设置4℃冷冻设置-18℃。热饭菜不要直接放进冰箱，放到室温再放入。空调频繁开关机比持续运行更费电。","href":"http://m.toutiao.com/group/7667823467269521935/"},{"title":"慧过日子惠节电！供电公司登门送妙招","body":"不用的插头及时拔掉避免电器待机耗电、空调设置在26℃既凉快又省电、冰箱内食物过满会增加压缩机负担耗电又减少电器寿命。出门一小时以内不用关空调，调高1-2℃保持低速运行即可。","href":"http://m.toutiao.com/group/7668986996043285019/"}],"衣物":[{"title":"汗味发黄缩毛衣？5个家家都有的神器让旧衣焕新","body":"羊毛/羊绒衫缩水：温水加2瓶盖白醋+3泵护发素搅匀，衣物完全浸没浸泡15-30分钟，趁湿沿经纬方向轻柔拉伸至原尺寸，平铺晾干。毛衣绝对不能悬挂晾晒，会被重力拉长变形。","href":"https://post.m.smzdm.com/p/ako9xeq8/"},{"title":"几千元的羊毛衫洗缩水？别扔！低成本就能救回来","body":"把缩水毛衣平铺在干的大浴巾上，顺着织物纹理用均匀力气向外拉，找一件尺寸差不多的衣服做参照物，对照着找回原本的肩线和袖长。然后像卷寿司一样用浴巾卷起来按压吸水，严禁悬挂。","href":"http://m.toutiao.com/group/7667401354691953152/"},{"title":"毛衣保养与洗涤指南：羊绒羊毛棉质正确护理方法","body":"毛衣护理三个核心原则：①按材质分类，羊绒手洗、棉质可机洗；②平铺晾干不能悬挂；③收纳前必须彻底洗净晾干。80%的毛衣损坏都源于这三点做错了其中一个。","href":"https://www.linsweater.com/blog/sweater_care_washing_guide.html"},{"title":"How to Unshrink a Sweater","body":"每加仑水加入1-2汤匙普通护发素，搅拌至溶解。将缩水毛衣完全浸没浸泡30分钟，护发素中的润滑剂能放松纤维。不要拧干，用毛巾卷起来吸走水分，平铺晾干。","href":"https://www.bitsandbangles.com/blogs/news/how-to-unshrink-a-sweater-yes-it-actually-works"}],"食材":[{"title":"水果蔬菜保存方法，90%的人都做错了！","body":"果蔬保存核心不是一股脑塞进冰箱，而是分类处理+正确预处理。绿叶菜晾干包厨房纸冷藏能保鲜5-7天，根茎类擦干放阴凉处可存2周，热带水果室温存放，冷冻是延长保质期的终极方案。","href":"https://k.sina.cn/article_7880068908_1d5b04f2c06801l3ug.html"},{"title":"水果蔬菜保存方法科学版：完整保鲜指南","body":"香蕉根部包裹保鲜膜延缓成熟，悬挂避光通风存放。芒果、木瓜用牛皮纸包裹常温催熟。浆果类储存前绝对不清洗，剔除破损果子，保鲜盒底部垫厨房纸吸湿松散摆放。","href":"https://sina.cn/detail/niiyptt1414638"},{"title":"水果和蔬菜的保存方法有哪些共性？","body":"必须冷藏的：绿叶菜、浆果、菌菇类、瓜茄类。必须常温的：热带水果（香蕉、芒果、木瓜）、根茎类（土豆、红薯、洋葱、大蒜）、未成熟的番茄。绿叶菜不要贴紧冰箱内壁防止冻伤。","href":"https://k.sina.cn/article_7879776415_1d5abd89f068023y9u.html"},{"title":"难怪食材放几天就变质！多数人冰箱分区一直用错","body":"冰箱保鲜抽屉分为高湿度抽屉和低湿度抽屉。高湿环境适合绿叶蔬菜、菠菜、生菜、香菜等，把湿度档位调高减少空气流通锁住菜叶水分。蔬菜不要密封塑料袋闷死，塑料袋扎几个小孔透气。","href":"http://m.toutiao.com/group/7669336036522213911/"}],"去渍":[{"title":"厨房去油污10种小方法，很实用建议收藏","body":"小苏打+少量水调成糊状，涂抹油污处静置15分钟，用旧牙刷擦洗。顽固油垢可加少量盐增加摩擦力。白醋和水1:1喷在撒了小苏打的地方，滋滋冒泡起反应后油污自然分解。","href":"http://m.toutiao.com/group/7501587313773691442/"},{"title":"家政阿姨酒后真言：5个清洁秘方从不外传","body":"小苏打+白醋是最强CP组合拳。先撒干爽小苏打粉覆盖油污，再将白醋和水1:1喷在上面，静置后油污轻松擦掉。洗洁精和温水按1:10稀释喷洒，静置3-5分钟再擦拭。","href":"https://c.m.163.com/news/a/K8AM64L805448Z8F.html"},{"title":"汗味发黄缩毛衣？5个家家都有的神器让旧衣焕新","body":"白衣服发黄：温水加小苏打和少量白醋浸泡1小时再正常洗涤。柠檬片煮水浸泡衣服，天然漂白又清香。汗渍发黄处可用牙膏+小苏打调成糊状涂抹，搓洗后效果显著。","href":"https://post.m.smzdm.com/p/ako9xeq8/"}],"收纳":[{"title":"冰箱总串味？这样布局+清洁才真正管用","body":"做好分区分层收纳，不同食材分开摆放选择适合容器包装，防止气味交叉传播。活性炭包每层至少放1包，每2周取出暴晒恢复吸附能力。咖啡渣或茶叶梗装入带孔容器放门架。","href":"https://post.m.smzdm.com/p/a4q787dl/"},{"title":"难怪食材放几天就变质！多数人冰箱分区一直用错","body":"冰箱保鲜抽屉分高湿度抽屉和低湿度抽屉。高湿适合绿叶蔬菜锁住水分，低湿适合水果防止过度潮湿。冰箱内食物存放70%-80%是黄金比例，留出空间让冷气循环。","href":"http://m.toutiao.com/group/7669336036522213911/"},{"title":"衣柜收纳翻倍技巧","body":"把衣服竖着放而不是叠着放，像书架一样排列，一目了然且拿取方便。用鞋盒盖当抽屉分隔板，零成本实现分区收纳。换季衣物用真空压缩袋收纳，节省70%空间。","href":"https://post.m.smzdm.com/p/a4q787dl/"}],"清洁":[{"title":"厨房去油污10种小方法，很实用建议收藏","body":"小苏打+水调成糊状涂抹油污静置15分钟，旧牙刷擦洗。白醋和水1:1喷在撒了小苏打的地方。微波炉放一碗水加几片柠檬高火加热3分钟，蒸汽软化内壁油污一擦就干净。","href":"http://m.toutiao.com/group/7501587313773691442/"},{"title":"厨房油渍快速清理术","body":"玻璃灶台使用专用玻璃清洁剂或小苏打糊，用海绵软面擦拭，最后用鱼鳞布擦干避免水痕。每次做完饭后趁灶台余温用湿抹布快速擦拭一遍，能极大减轻日后清洁负担。","href":"https://post.smzdm.com/p/adow2kpn"},{"title":"冰箱清洗与除味全攻略：30分钟搞定半年无异味","body":"用软布蘸取小苏打温水溶液（2-3勺兑500ml温水）擦拭内胆。密封条用棉签蘸白醋深入褶皱擦拭霉斑。排水孔用细管刷清理。清洁后务必保持内部干爽防霉菌复发。","href":"https://post.m.smzdm.com/p/a504554x/"}]};
+    // ── Web Search Cache ──
+    const searchCache = {"厨房":[{"title":"厨房去油污10种小方法，很实用建议收藏","body":"小苏打+少量水调成糊状，涂抹油污处静置15分钟，用旧牙刷擦洗。顽固油垢可加少量盐增加摩擦力，最后用热毛巾擦净。白醋和水按1:1比例装入喷壶，均匀喷在撒了小苏打的地方，滋滋冒泡起反应后油污自然分解。","href":"http://m.toutiao.com/group/7501587313773691442/"},{"title":"家政阿姨酒后真言：5个清洁秘方从不外传","body":"小苏打+白醋是最强CP组合拳。先撒干爽小苏打粉覆盖油污，再将白醋和水1:1喷在上面，看到「火山爆发」现象后静置，油污轻松擦掉。洗洁精和温水按1:10稀释喷洒，静置3-5分钟再擦拭。","href":"https://c.m.163.com/news/a/K8AM64L805448Z8F.html"},{"title":"厨房油渍快速清理术","body":"玻璃灶台避免使用硬质清洁工具刮擦。使用专用玻璃清洁剂或小苏打糊，用海绵软面擦拭，最后用干净的鱼鳞布擦干，可避免水痕。每次做完饭后趁灶台余温用湿抹布快速擦拭一遍，能极大减轻日后清洁负担。","href":"https://post.smzdm.com/p/adow2kpn"},{"title":"厨房清洁别再瞎忙活！4个常见误区坑了很多人","body":"先把洗洁精和温水按1:10的比例稀释装在喷瓶里，对着油污处喷洒，静置3-5分钟让表面活性剂分解油污，再用百洁布软面擦拭。老油污可在喷洒后铺一层湿纸巾，让油污充分软化，清洁效率更高。","href":"https://www.sohu.com/a/955715988_122566611"}],"冰箱":[{"title":"冰箱总串味？这样布局+清洁才真正管用","body":"活性炭包放置于冷藏室中层及冷冻室角落，每2周取出暴晒4小时恢复吸附能力。咖啡渣或茶叶梗必须使用干燥状态并装入带透气孔的密封容器，置于门架或抽屉内，3天内更换避免受潮发霉。","href":"https://post.m.smzdm.com/p/a4q787dl/"},{"title":"教您如何快速清除冰箱异味","body":"小苏打是最推荐的性价比之王，去味+吸潮气，无毒无残留。准备3-5勺小苏打放在广口容器中置于冰箱角落。活性炭、白醋、柠檬柚子皮也有效，效果排序：活性炭≈小苏打>白醋>柠檬皮。","href":"https://k.sina.cn/article_7879777110_1d5abdb5601901uszw.html"},{"title":"冰箱清洗与除味全攻略：30分钟搞定半年无异味","body":"用软布蘸取小苏打温水溶液（2-3勺小苏打兑500ml温水）擦拭内胆。密封条用棉签蘸白醋深入褶皱擦拭霉斑。排水孔用细管刷清理，避免堵塞产生异味。","href":"https://post.m.smzdm.com/p/a504554x/"},{"title":"冰箱日常清洁除味高效实用方法","body":"在冰箱角落放置广口容器装的小苏打，它能与酸性、碱性异味物质反应从而吸附气味。活性炭用透气布袋装炭包效果更持久。晒干的茶叶、柚子皮、橘子皮也可替代，需每隔3天更换。","href":"https://k.sina.cn/article_7879923742_1d5ae181e06801i0bg.html"}],"健康":[{"title":"2026年好好养自己！这8个变年轻习惯你知道吗","body":"每天靠墙站10分钟，挺拔体态自然来。这不仅仅是一个姿势，更是一种反重力的全身肌肉训练，持续标准站立1分钟就可以有效消耗热量。对于轻微驼背，靠墙站立是不错的矫正方法。","href":"https://app.people.cn/h5/detail/normal/6645194493969408"},{"title":"健康科普小知识","body":"每天喝1500-2000ml白开水少量多次。少喝奶茶、碳酸饮料、含糖饮品。三餐规律，早餐一定要吃。每天蔬菜500克以上，深色蔬菜占一半。每天水果200-350克，果汁不能替代鲜果。","href":"https://www.yantai.gov.cn/col/col85630/art/2026/art_e70fa7519e4f4443a71624693d4e7b09.html"},{"title":"这份健康长寿生活小贴士请收好","body":"睡前不宜过度用脑、不宜剧烈运动、不宜看手机。入睡前2小时内不要锻炼，运动后大脑皮层兴奋度高，短时间难以入睡。睡前远离手机屏幕，蓝光会抑制褪黑素分泌影响睡眠质量。","href":"http://www.chinanews.com.cn/jk/2025/08-20/10467875.shtml"},{"title":"三伏天老年人注意事项：医生提醒这5件事不要做","body":"不要因为怕起夜就少喝水，即使不渴也要每天少量多次喝2000毫升温开水，出汗多时还要适当增加饮水量，降低血液黏稠度预防血栓形成。不要自行增减药量。","href":"http://m.toutiao.com/group/7669291149110067753/"}],"省电":[{"title":"今夏全场景省电攻略请收好！","body":"夏季空调设置在26℃左右最适宜，每调高1℃可省电7%-10%。室内外温差控制在5-8℃最舒适又省电。配合风扇使用，空调温度可设高2-3℃，体感温度一样但耗电明显降低。","href":"https://m.thepaper.cn/newsDetail_forward_33547975"},{"title":"炎夏电费噌噌涨？收好这份官方节能清单","body":"将空调温度设置在26℃-28℃之间，每调高1℃空调能耗可降低约7%-10%。巧妙利用冷空气下沉原理，空调风向朝上让冷气均匀分布。定期清洗滤网，灰尘堵塞会让耗电量增加10%-20%。","href":"https://tidenews.com.cn/news.html?id=3167528"},{"title":"90%家庭都搞错的省电习惯！每月白白多交一半电费","body":"冰箱存放70%-80%是黄金比例，既保留蓄冷物体又留出冷气循环通道。冷藏设置4℃冷冻设置-18℃。热饭菜不要直接放进冰箱，放到室温再放入。空调频繁开关机比持续运行更费电。","href":"http://m.toutiao.com/group/7667823467269521935/"},{"title":"慧过日子惠节电！供电公司登门送妙招","body":"不用的插头及时拔掉避免电器待机耗电、空调设置在26℃既凉快又省电、冰箱内食物过满会增加压缩机负担耗电又减少电器寿命。出门一小时以内不用关空调，调高1-2℃保持低速运行即可。","href":"http://m.toutiao.com/group/7668986996043285019/"}],"衣物":[{"title":"汗味发黄缩毛衣？5个家家都有的神器让旧衣焕新","body":"羊毛/羊绒衫缩水：温水加2瓶盖白醋+3泵护发素搅匀，衣物完全浸没浸泡15-30分钟，趁湿沿经纬方向轻柔拉伸至原尺寸，平铺晾干。毛衣绝对不能悬挂晾晒，会被重力拉长变形。","href":"https://post.m.smzdm.com/p/ako9xeq8/"},{"title":"几千元的羊毛衫洗缩水？别扔！低成本就能救回来","body":"把缩水毛衣平铺在干的大浴巾上，顺着织物纹理用均匀力气向外拉，找一件尺寸差不多的衣服做参照物，对照着找回原本的肩线和袖长。然后像卷寿司一样用浴巾卷起来按压吸水，严禁悬挂。","href":"http://m.toutiao.com/group/7667401354691953152/"},{"title":"毛衣保养与洗涤指南：羊绒羊毛棉质正确护理方法","body":"毛衣护理三个核心原则：①按材质分类，羊绒手洗、棉质可机洗；②平铺晾干不能悬挂；③收纳前必须彻底洗净晾干。80%的毛衣损坏都源于这三点做错了其中一个。","href":"https://www.linsweater.com/blog/sweater_care_washing_guide.html"},{"title":"How to Unshrink a Sweater","body":"每加仑水加入1-2汤匙普通护发素，搅拌至溶解。将缩水毛衣完全浸没浸泡30分钟，护发素中的润滑剂能放松纤维。不要拧干，用毛巾卷起来吸走水分，平铺晾干。","href":"https://www.bitsandbangles.com/blogs/news/how-to-unshrink-a-sweater-yes-it-actually-works"}],"食材":[{"title":"水果蔬菜保存方法，90%的人都做错了！","body":"果蔬保存核心不是一股脑塞进冰箱，而是分类处理+正确预处理。绿叶菜晾干包厨房纸冷藏能保鲜5-7天，根茎类擦干放阴凉处可存2周，热带水果室温存放，冷冻是延长保质期的终极方案。","href":"https://k.sina.cn/article_7880068908_1d5b04f2c06801l3ug.html"},{"title":"水果蔬菜保存方法科学版：完整保鲜指南","body":"香蕉根部包裹保鲜膜延缓成熟，悬挂避光通风存放。芒果、木瓜用牛皮纸包裹常温催熟。浆果类储存前绝对不清洗，剔除破损果子，保鲜盒底部垫厨房纸吸湿松散摆放。","href":"https://sina.cn/detail/niiyptt1414638"},{"title":"水果和蔬菜的保存方法有哪些共性？","body":"必须冷藏的：绿叶菜、浆果、菌菇类、瓜茄类。必须常温的：热带水果（香蕉、芒果、木瓜）、根茎类（土豆、红薯、洋葱、大蒜）、未成熟的番茄。绿叶菜不要贴紧冰箱内壁防止冻伤。","href":"https://k.sina.cn/article_7879776415_1d5abd89f068023y9u.html"},{"title":"难怪食材放几天就变质！多数人冰箱分区一直用错","body":"冰箱保鲜抽屉分为高湿度抽屉和低湿度抽屉。高湿环境适合绿叶蔬菜、菠菜、生菜、香菜等，把湿度档位调高减少空气流通锁住菜叶水分。蔬菜不要密封塑料袋闷死，塑料袋扎几个小孔透气。","href":"http://m.toutiao.com/group/7669336036522213911/"}],"去渍":[{"title":"厨房去油污10种小方法，很实用建议收藏","body":"小苏打+少量水调成糊状，涂抹油污处静置15分钟，用旧牙刷擦洗。顽固油垢可加少量盐增加摩擦力。白醋和水1:1喷在撒了小苏打的地方，滋滋冒泡起反应后油污自然分解。","href":"http://m.toutiao.com/group/7501587313773691442/"},{"title":"家政阿姨酒后真言：5个清洁秘方从不外传","body":"小苏打+白醋是最强CP组合拳。先撒干爽小苏打粉覆盖油污，再将白醋和水1:1喷在上面，静置后油污轻松擦掉。洗洁精和温水按1:10稀释喷洒，静置3-5分钟再擦拭。","href":"https://c.m.163.com/news/a/K8AM64L805448Z8F.html"},{"title":"汗味发黄缩毛衣？5个家家都有的神器让旧衣焕新","body":"白衣服发黄：温水加小苏打和少量白醋浸泡1小时再正常洗涤。柠檬片煮水浸泡衣服，天然漂白又清香。汗渍发黄处可用牙膏+小苏打调成糊状涂抹，搓洗后效果显著。","href":"https://post.m.smzdm.com/p/ako9xeq8/"}],"收纳":[{"title":"冰箱总串味？这样布局+清洁才真正管用","body":"做好分区分层收纳，不同食材分开摆放选择适合容器包装，防止气味交叉传播。活性炭包每层至少放1包，每2周取出暴晒恢复吸附能力。咖啡渣或茶叶梗装入带孔容器放门架。","href":"https://post.m.smzdm.com/p/a4q787dl/"},{"title":"难怪食材放几天就变质！多数人冰箱分区一直用错","body":"冰箱保鲜抽屉分高湿度抽屉和低湿度抽屉。高湿适合绿叶蔬菜锁住水分，低湿适合水果防止过度潮湿。冰箱内食物存放70%-80%是黄金比例，留出空间让冷气循环。","href":"http://m.toutiao.com/group/7669336036522213911/"},{"title":"衣柜收纳翻倍技巧","body":"把衣服竖着放而不是叠着放，像书架一样排列，一目了然且拿取方便。用鞋盒盖当抽屉分隔板，零成本实现分区收纳。换季衣物用真空压缩袋收纳，节省70%空间。","href":"https://post.m.smzdm.com/p/a4q787dl/"}],"清洁":[{"title":"厨房去油污10种小方法，很实用建议收藏","body":"小苏打+水调成糊状涂抹油污静置15分钟，旧牙刷擦洗。白醋和水1:1喷在撒了小苏打的地方。微波炉放一碗水加几片柠檬高火加热3分钟，蒸汽软化内壁油污一擦就干净。","href":"http://m.toutiao.com/group/7501587313773691442/"},{"title":"厨房油渍快速清理术","body":"玻璃灶台使用专用玻璃清洁剂或小苏打糊，用海绵软面擦拭，最后用鱼鳞布擦干避免水痕。每次做完饭后趁灶台余温用湿抹布快速擦拭一遍，能极大减轻日后清洁负担。","href":"https://post.smzdm.com/p/adow2kpn"},{"title":"冰箱清洗与除味全攻略：30分钟搞定半年无异味","body":"用软布蘸取小苏打温水溶液（2-3勺兑500ml温水）擦拭内胆。密封条用棉签蘸白醋深入褶皱擦拭霉斑。排水孔用细管刷清理。清洁后务必保持内部干爽防霉菌复发。","href":"https://post.m.smzdm.com/p/a504554x/"}],"解冻":[{"title":"快速解冻肉类的正确方法","body":"不锈钢锅底/铝箔夹住冷冻肉，金属导热性极好，解冻速度比室温快3倍。微波炉解冻模式按重量设定，中途翻面。最佳方式是提前一晚放冷藏室缓慢解冻，肉质不受影响。","href":"https://post.m.smzdm.com/p/adow2kpn"}],"落枕":[{"title":"落枕了怎么办？3个方法快速缓解","body":"用吹风机热风对着颈部疼痛部位吹5-10分钟，同时缓慢转动脖子。热敷能放松痉挛肌肉。轻柔拉伸，不要用力过猛。如果反复落枕，要检查枕头高度是否合适。","href":"https://k.sina.cn/article_7879777110_1d5abdb5601901uszw.html"}],"晕车":[{"title":"预防晕车的小妙招","body":"上车前半小时切一片新鲜生姜贴在肚脐上，用创可贴固定。生姜中的姜辣素能抑制恶心和呕吐感。选择前排靠窗座位，看远处地平线，不要低头看书或手机。","href":"https://www.yantai.gov.cn/col/col85630/art/2026/art_e70fa7519e4f4443a71624693d4e7b09.html"}],"打嗝":[{"title":"快速止打嗝的简单方法","body":"深吸一口气，憋住气的同时捏住鼻子，坚持尽可能长的时间。体内CO₂浓度升高会抑制膈肌痉挛。喝一大口水分多次咽下，或者吃一勺白糖，刺激迷走神经也能止嗝。","href":"http://www.chinanews.com.cn/jk/2025/08-20/10467875.shtml"}],"口腔溃疡":[{"title":"口腔溃疡反复发作怎么办","body":"用棉签蘸蜂蜜涂在溃疡处，形成保护膜隔离刺激，有天然抗菌作用。温盐水漱口每天3-4次。避免辛辣刺激食物，多吃富含维生素B族的食物。","href":"https://www.yantai.gov.cn/col/col85630/art/2026/art_e70fa7519e4f4443a71624693d4e7b09.html"}],"充电":[{"title":"手机充电省电小技巧","body":"手机充满电后及时拔掉充电器，充电器空载也在耗电。用原装充电器充电效率最高。不要边充电边玩手机，发热会加速电池老化。电量保持在20%-80%之间最利于电池寿命。","href":"https://tidenews.com.cn/news.html?id=3167528"}],"热水器":[{"title":"电热水器怎么用最省电","body":"夏天水温调低到40-45°C，冬天50-55°C。长时间不用时关掉电源，比一直保温模式省电30%以上。定期清理内胆水垢提升加热效率。","href":"https://m.thepaper.cn/newsDetail_forward_33547975"}],"起球":[{"title":"衣服起球怎么办","body":"用一次性剃须刀轻轻刮过起球表面，毛球轻松去除。宽透明胶带粘走毛球也很方便。日常穿着避免与粗糙表面摩擦，洗涤时把衣服翻面可以减少起球。","href":"https://post.m.smzdm.com/p/ako9xeq8/"}],"汗渍":[{"title":"去除衣领汗渍的妙招","body":"洗发水涂在领口发黄处，搓揉后静置10分钟再洗。洗发水专门分解人体皮脂和汗渍。白醋+小苏打调成糊状涂抹发黄处，静置30分钟后再洗也有效。","href":"https://post.m.smzdm.com/p/ako9xeq8/"}],"鞋臭":[{"title":"鞋子除臭的简单方法","body":"小苏打装进旧袜子或茶包袋里，塞进鞋子里过夜，吸湿除臭双效合一。干茶叶包可替代，还有茶香。定期更换鞋垫，两双鞋轮流穿，给鞋子充分通风干燥的时间。","href":"http://m.toutiao.com/group/7667401354691953152/"}],"鸡蛋保鲜":[{"title":"鸡蛋怎么放冰箱保鲜最久","body":"鸡蛋放冰箱时大头朝上，蛋黄悬浮在中间不会贴壳，保鲜更久。鸡蛋壳表面有天然保护膜，吃之前再洗。不要放在冰箱门架处，那里温度波动大，放在冷藏室内部更稳定。","href":"https://k.sina.cn/article_7880068908_1d5b04f2c06801l3ug.html"}],"豆腐":[{"title":"豆腐怎么保存不会酸","body":"豆腐放保鲜盒里，加凉开水完全没过豆腐，每天换一次水，能在冰箱保存3-5天不变酸。如果豆腐已经有酸味，用开水焯一下可以去除酸味，但口感会受影响。","href":"https://sina.cn/detail/niiyptt1414638"}],"苹果":[{"title":"切开的苹果怎么不变色","body":"切开的苹果用橡皮筋把几瓣重新绑在一起恢复原形，减少接触空气的面积。泡淡盐水3分钟捞出沥干，抗氧化效果显著。柠檬汁涂抹切面也能防止氧化变褐。","href":"https://k.sina.cn/article_7879776415_1d5abd89f068023y9u.html"}],"蘑菇":[{"title":"蘑菇怎么保存不会变黏","body":"蘑菇用纸袋装不要用塑料袋，纸袋透气能防止蘑菇出水变黏。放冰箱前不要清洗，吃之前再洗。如果蘑菇已经变黏，说明开始变质，不建议食用。","href":"http://m.toutiao.com/group/7669336036522213911/"}]};
 
-    // ── Web Search (local cache) ──
+    // ── Web Search ──
     function webSearch(query) {
       webResultsSection.classList.add('show');
       searchLoading.classList.add('show');
       webResultsGrid.innerHTML = '';
 
-      // Simulate brief loading for UX
       setTimeout(() => {
         searchLoading.classList.remove('show');
         const results = [];
         const seen = new Set();
 
-        // Match query against cache keys
         for (const [key, items] of Object.entries(searchCache)) {
           if (query.includes(key) || key.includes(query) || 
               items.some(item => item.title.includes(query) || item.body.includes(query))) {
@@ -773,7 +1037,6 @@
           }
         }
 
-        // If no exact match, fuzzy match by character overlap
         if (results.length === 0) {
           for (const [key, items] of Object.entries(searchCache)) {
             const overlap = [...key].filter(c => query.includes(c)).length;
@@ -860,6 +1123,19 @@
     function closeDetail() {
       detailOverlay.classList.remove('open');
       document.body.style.overflow = '';
+    }
+
+    // ── URL-based category filter ──
+    const params = new URLSearchParams(window.location.search);
+    const catParam = params.get('cat');
+    if (catParam && tipData[catParam]) {
+      const tag = document.querySelector(`.filter-tag[data-cat="${catParam}"]`);
+      if (tag) {
+        filterTags.querySelectorAll('.filter-tag').forEach(t => t.classList.remove('active'));
+        tag.classList.add('active');
+        activeFilter = catParam;
+        applyFilters();
+      }
     }
   </script>
 </body>
