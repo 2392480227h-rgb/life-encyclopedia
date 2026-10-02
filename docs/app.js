@@ -5,10 +5,103 @@ const items=[{"c":"逆天发言","l":"逆天","t":"我不会电脑","q":"I AM NO
 const cats=["全部","极臭","恶臭","逆天发言","政治抽象","黑色幽默","简中互联网","全球互联网","历史地狱笑话"];
 let active="全部";
 const grid=document.querySelector("#grid"),input=document.querySelector("#searchInput"),nav=document.querySelector("#categories");
-function cls(c){return c==="极臭"?"extreme":c==="恶臭"?"stinky":c==="政治抽象"?"politics":c==="黑色幽默"?"black":c==="简中互联网"?"cn":"absurd"}
-function render(){const q=input.value.trim().toLowerCase();const list=items.filter(x=>(active==="全部"||x.c===active)&&(!q||(x.t+x.q+x.s+x.c+x.n).toLowerCase().includes(q)));grid.innerHTML=list.map((x,i)=>'<article class="card" data-i="'+items.indexOf(x)+'"><span class="tag '+cls(x.c)+'">'+x.c+" · "+x.l+'</span><h2>'+x.t+'</h2><div class="quote">“'+x.q+'”</div><div class="meta"><span>'+x.s+'</span><span>查看 →</span></div></article>').join("");document.querySelector("#empty").classList.toggle("hidden",list.length>0);document.querySelector("#totalCount").textContent=items.length;document.querySelector("#categoryCount").textContent=cats.length-1;grid.querySelectorAll(".card").forEach(el=>el.onclick=()=>detail(items[Number(el.dataset.i)]))}
-function detail(x){document.querySelector("#detailContent").innerHTML='<span class="tag '+cls(x.c)+'">'+x.c+" · "+x.l+'</span><h2>'+x.t+'</h2><div class="quote">“'+x.q+'”</div><p>'+x.n+'</p><p>来源：'+x.s+'<br><a href="'+x.u+'" target="_blank" rel="noopener">打开原始来源 ↗</a></p>';document.querySelector("#detailDialog").showModal()}
-nav.innerHTML=cats.map(c=>'<button class="category '+(c===active?"active":"")+'" data-c="'+c+'">'+c+"</button>").join("");
+
+function cls(c){return c==="极臭"?"extreme":c==="恶臭"?"stinky":c==="政治抽象"?"politics":c==="黑色幽默"?"black":c==="简中互联网"?"cn":c==="全球互联网"?"global":c==="历史地狱笑话"?"history":c==="互联网党争与蠢贼"?"war":"absurd"}
+const imageCache=new Map();
+const imagePending=new Map();
+async function commonsImage(x){
+  const key=x.t+"|"+x.q;
+  if(imageCache.has(key))return imageCache.get(key);
+  if(imagePending.has(key))return imagePending.get(key);
+  const promise=(async()=>{
+    try{
+      const query=(x.q||x.t).replace(/[“”"']/g," ").trim().slice(0,120);
+      const url="https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch="+encodeURIComponent(query)+"&gsrnamespace=6&gsrlimit=1&prop=imageinfo&iiprop=url|mime|size|extmetadata&iiurlwidth=900&format=json&origin=*";
+      const r=await fetch(url,{headers:{Accept:"application/json"}});
+      if(!r.ok)throw new Error("HTTP "+r.status);
+      const j=await r.json();
+      const p=j.query&&j.query.pages?Object.values(j.query.pages)[0]:null;
+      const info=p&&p.imageinfo&&p.imageinfo[0];
+      if(!info||!info.url)return null;
+      const meta=info.extmetadata||{};
+      const data={
+        thumb:info.thumburl||info.url,
+        original:info.url,
+        page:"https://commons.wikimedia.org/wiki/File:"+encodeURIComponent((p.title||"").replace(/^File:/,"")).replace(/%2F/g,"/"),
+        title:(p.title||"").replace(/^File:/,""),
+        license:(meta.LicenseShortName&&meta.LicenseShortName.value)||"许可证见文件页",
+        artist:(meta.Artist&&meta.Artist.value)||""
+      };
+      imageCache.set(key,data);
+      return data;
+    }catch(e){imageCache.set(key,null);return null}
+    finally{imagePending.delete(key)}
+  })();
+  imagePending.set(key,promise);
+  return promise;
+}
+function mediaHtml(i,kind){
+  const k=kind||"card";
+  return '<div class="'+k+'-media media-loading" data-media="'+i+'"><div class="media-placeholder">🖼️ 图片考古中…</div></div>';
+}
+function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+async function fillMedia(el,x){
+  if(!el||el.dataset.loaded)return;
+  const data=await commonsImage(x);
+  if(!el.isConnected)return;
+  el.dataset.loaded="1";
+  el.classList.remove("media-loading");
+  if(!data){
+    el.innerHTML='<div class="media-placeholder no-image">🗿 暂未在 Wikimedia Commons 找到匹配图<br><a href="https://commons.wikimedia.org/w/index.php?search='+encodeURIComponent(x.t)+'&title=Special:MediaSearch&type=image" target="_blank" rel="noopener">手动考古原图 ↗</a></div>';
+    return;
+  }
+  el.innerHTML='<a class="media-link" href="'+data.original+'" target="_blank" rel="noopener"><img loading="lazy" src="'+data.thumb+'" alt="'+esc(x.t)+'"></a><div class="media-credit">Wikimedia Commons · '+esc(data.license)+'</div>';
+}
+function observeMedia(){
+  const els=[...document.querySelectorAll("[data-media]")];
+  if(!els.length)return;
+  if(!("IntersectionObserver" in window)){
+    els.slice(0,18).forEach(el=>fillMedia(el,items[Number(el.dataset.media)]));
+    return;
+  }
+  const io=new IntersectionObserver(entries=>{
+    entries.filter(e=>e.isIntersecting).forEach(e=>{
+      const el=e.target;
+      io.unobserve(el);
+      fillMedia(el,items[Number(el.dataset.media)]);
+    });
+  },{rootMargin:"700px"});
+  els.forEach(el=>io.observe(el));
+}
+function render(){
+  const q=input.value.trim().toLowerCase();
+  const list=items.filter(x=>(active==="全部"||x.c===active)&&(!q||(x.t+x.q+x.s+x.c+x.n).toLowerCase().includes(q)));
+  grid.innerHTML=list.map(x=>'<article class="card" data-i="'+items.indexOf(x)+'">'+mediaHtml(items.indexOf(x))+'<span class="tag '+cls(x.c)+'">'+esc(x.c)+" · "+esc(x.l)+'</span><h2>'+esc(x.t)+'</h2><div class="quote">“'+esc(x.q)+'”</div><div class="meta"><span>'+esc(x.s)+'</span><span>查看 →</span></div></article>').join("");
+  document.querySelector("#empty").classList.toggle("hidden",list.length>0);
+  document.querySelector("#totalCount").textContent=items.length;
+  document.querySelector("#categoryCount").textContent=cats.length-1;
+  grid.querySelectorAll(".card").forEach(el=>el.onclick=()=>detail(items[Number(el.dataset.i)]));
+  observeMedia();
+}
+async function detail(x){
+  document.querySelector("#detailContent").innerHTML='<span class="tag '+cls(x.c)+'">'+esc(x.c)+" · "+esc(x.l)+'</span><h2>'+esc(x.t)+'</h2>'+mediaHtml(items.indexOf(x),"detail")+'<div class="quote">“'+esc(x.q)+'”</div><p>'+esc(x.n)+'</p><p>来源：'+esc(x.s)+'</p><div id="imageMeta" class="image-meta">🖼️ 正在查询原图与许可信息…</div><p><a href="'+esc(x.u)+'" target="_blank" rel="noopener">打开原始资料 ↗</a></p>';
+  document.querySelector("#detailDialog").showModal();
+  const media=document.querySelector('#detailContent [data-media]');
+  const metaBox=document.querySelector("#imageMeta");
+  const data=await commonsImage(x);
+  if(!media||!metaBox)return;
+  if(!data){
+    media.classList.remove("media-loading");
+    media.innerHTML='<div class="media-placeholder no-image">🗿 暂未在 Wikimedia Commons 找到匹配图<br><a href="https://commons.wikimedia.org/w/index.php?search='+encodeURIComponent(x.t)+'&title=Special:MediaSearch&type=image" target="_blank" rel="noopener">去 Commons 手动找原图 ↗</a></div>';
+    metaBox.textContent="图片来源：Wikimedia Commons 搜索，无自动匹配结果。";
+  }else{
+    media.classList.remove("media-loading");
+    media.dataset.loaded="1";
+    media.innerHTML='<a class="media-link" href="'+data.original+'" target="_blank" rel="noopener"><img src="'+data.thumb+'" alt="'+esc(x.t)+'"></a><div class="media-credit">Wikimedia Commons · '+esc(data.license)+'</div>';
+    metaBox.innerHTML='许可：<strong>'+esc(data.license)+'</strong>'+(data.artist?" · 作者/署名："+esc(data.artist):"")+' · <a href="'+esc(data.page)+'" target="_blank" rel="noopener">打开文件页 ↗</a>';
+  }
+}
+nav.innerHTML=cats.map(c=>'<button class="category '+(c===active?"active":"")+'" data-c="'+esc(c)+'">'+esc(c)+"</button>").join("");
 nav.querySelectorAll("button").forEach(b=>b.onclick=()=>{active=b.dataset.c;nav.querySelectorAll("button").forEach(x=>x.classList.toggle("active",x===b));render()});
 input.oninput=render;
 document.querySelector("#randomBtn").onclick=()=>detail(items[Math.floor(Math.random()*items.length)]);
