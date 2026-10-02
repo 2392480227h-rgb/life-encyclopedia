@@ -22,20 +22,30 @@ function imageQueryVariants(x){
   if(cat)variants.push(t+" "+cat);
   return [...new Set(variants)].slice(0,3);
 }
+function queryTokens(v){
+  const s=normalizeSearch(v).toLowerCase();
+  const latin=(s.match(/[a-z0-9][a-z0-9._+-]*/g)||[]);
+  const cjk=s.match(/[\\u4e00-\\u9fff]/g)||[];
+  const cjkBigrams=[];
+  for(let i=0;i<cjk.length-1;i++){const b=cjk[i]+cjk[i+1];if(!["互联网","网络","发言","开始","问题","一个","自己","东西","可以","这个"].includes(b))cjkBigrams.push(b)}
+  return {words:[...new Set(latin.filter(w=>w.length>=3&&!new Set(["the","and","for","you","are","this","that","with","from","meme","internet","image","images"]).has(w)))],bigrams:[...new Set(cjkBigrams)]};
+}
 function scoreCandidate(page,variant,x){
   const title=normalizeSearch(page.title||"").toLowerCase();
   const desc=normalizeSearch(page.description||"").toLowerCase();
   const v=normalizeSearch(variant).toLowerCase();
-  const stop=new Set(["the","and","for","you","are","this","that","with","from","meme","internet","image","images"]);
-  const words=[...new Set(v.split(" ").filter(w=>w.length>=3&&!stop.has(w)))];
-  const matched=words.filter(w=>title.includes(w));
+  const {words,bigrams}=queryTokens(v);
+  const matchedWords=words.filter(w=>title.includes(w));
+  const matchedBigrams=bigrams.filter(b=>title.includes(b));
+  const matchedAll=matchedWords.length+matchedBigrams.length;
   let score=0;
-  if(v&&title.includes(v))score+=30;
-  for(const w of words){if(title.includes(w))score+=6;if(desc.includes(w))score+=1}
-  if(/meme|reaction|gif|jpg|png/.test(title))score+=1;
+  if(v&&title.includes(v))score+=35;
+  for(const w of matchedWords){score+=7;if(desc.includes(w))score+=1}
+  for(const b of matchedBigrams){score+=5;if(desc.includes(b))score+=1}
+  if(/meme|internet|reaction|gif|jpg|png/.test(title))score+=1;
   const hinted=!!imageHints[x.t];
-  if(!hinted&&words.length>=2&&matched.length<words.length)score-=12;
-  if(!hinted&&words.length>=3&&matched.length<Math.ceil(words.length*.67))score-=8;
+  if(!hinted&&matchedAll===0)score-=20;
+  if(!hinted&&bigrams.length>=2&&matchedBigrams.length<2&&matchedWords.length===0)score-=10;
   if(/真实蠢贼|蠢贼新闻/.test(x.t))score-=20;
   return score;
 }
@@ -61,10 +71,14 @@ async function commonsImage(x){
       if(!data)continue;
       const score=scoreCandidate(data,v,x);
       const hinted=!!imageHints[x.t];
-      const words=normalizeSearch(v).toLowerCase().split(" ").filter(w=>w.length>=3&&!["the","and","for","you","are","this","that","with","from","meme","internet","image","images"].includes(w));
+      const tokens=queryTokens(v);
       const title=normalizeSearch(data.title||"").toLowerCase();
-      const matched=words.filter(w=>title.includes(w)).length;
-      const strong=score>= (hinted?8:18) && (words.length<2 || matched>= (hinted?1:words.length));
+      const exact=!!v&&title.includes(v);
+      const matchedWords=tokens.words.filter(w=>title.includes(w)).length;
+      const matchedBigrams=tokens.bigrams.filter(b=>title.includes(b)).length;
+      const enoughChinese=!hinted&&tokens.bigrams.length>=2&&matchedBigrams>=2;
+      const enoughLatin=!hinted&&tokens.words.length>0&&matchedWords>=Math.max(1,Math.ceil(tokens.words.length*.5));
+      const strong=score>= (hinted?8:10) && (hinted||exact||enoughChinese||enoughLatin);
       if(strong){imageCache.set(key,data);return data}
     }
     imageCache.set(key,null);return null;
