@@ -2,7 +2,7 @@ const items=[{"c":"逆天发言","l":"逆天","t":"我不会电脑","q":"I AM NO
 ;
 
 
-const cats=["全部","极臭","恶臭","逆天发言","政治抽象","黑色幽默","简中互联网","全球互联网","历史地狱笑话"];
+const cats=["全部","极臭","恶臭","逆天发言","政治抽象","黑色幽默","简中互联网","互联网党争与蠢贼","全球互联网","历史地狱笑话"];
 let active="全部";
 const grid=document.querySelector("#grid"),input=document.querySelector("#searchInput"),nav=document.querySelector("#categories");
 
@@ -130,22 +130,36 @@ function renderRecent(){
   }).join(""):'<div class="favorite-empty">🗿 还没看过任何一坨。</div>';
 }
 
+function searchTokens(q){
+  return [...new Set(normalizeSearch(q).toLowerCase().split(" ").filter(Boolean))];
+}
 function searchScore(x,q){
   const needle=normalizeSearch(q).toLowerCase();if(!needle)return 0;
   const id=itemId(x).toLowerCase();
   const fields=[
     [x.t,12],[x.q,10],[x.s,7],[x.c,6],[x.l,5],[x.n,4],[id,3]
   ];
-  let score=0;
+  const words=searchTokens(needle);
+  let score=0,matched=0;
   for(const [value,weight] of fields){
     const text=normalizeSearch(value).toLowerCase();
     if(!text)continue;
     if(text===needle)score+=weight*2;
     else if(text.startsWith(needle))score+=weight+3;
     else if(text.includes(needle))score+=weight;
-    const words=needle.split(" ").filter(Boolean);
-    if(words.length>1&&words.every(w=>text.includes(w)))score+=Math.max(1,weight-2);
   }
+  for(const word of words){
+    let best=0;
+    for(const [value,weight] of fields){
+      const text=normalizeSearch(value).toLowerCase();
+      if(!text)continue;
+      if(text===word)best=Math.max(best,weight*2+3);
+      else if(text.startsWith(word))best=Math.max(best,weight+3);
+      else if(text.includes(word))best=Math.max(best,weight);
+    }
+    if(best){score+=best;matched++;}
+  }
+  if(words.length>1&&matched===words.length)score+=10+(words.length-2)*3;
   return score;
 }
 function searchResults(q){
@@ -155,11 +169,31 @@ function searchResults(q){
   return list.map(x=>({x,score:searchScore(x,needle)})).filter(v=>v.score>0).sort((a,b)=>b.score-a.score||items.indexOf(a.x)-items.indexOf(b.x));
 }
 function highlightText(value,q){
-  const text=String(value??""),needle=normalizeSearch(q);
-  if(!needle)return esc(text);
-  const lower=text.toLowerCase(),n=needle.toLowerCase(),at=lower.indexOf(n);
-  if(at<0)return esc(text);
-  return esc(text.slice(0,at))+'<mark class="search-hit">'+esc(text.slice(at,at+needle.length))+"</mark>"+esc(text.slice(at+needle.length));
+  const text=String(value??""),tokens=searchTokens(q);
+  if(!tokens.length)return esc(text);
+  const lower=text.toLowerCase(),ranges=[];
+  [...tokens].sort((a,b)=>b.length-a.length).forEach(token=>{
+    let from=0;
+    while(true){
+      const at=lower.indexOf(token,from);
+      if(at<0)break;
+      ranges.push([at,at+token.length]);
+      from=at+token.length;
+    }
+  });
+  ranges.sort((a,b)=>a[0]-b[0]||b[1]-a[1]);
+  const merged=[];
+  for(const range of ranges){
+    const last=merged[merged.length-1];
+    if(last&&range[0]<=last[1])last[1]=Math.max(last[1],range[1]);
+    else merged.push(range.slice());
+  }
+  let out="",cursor=0;
+  for(const [start,end] of merged){
+    out+=esc(text.slice(cursor,start))+'<mark class="search-hit">'+esc(text.slice(start,end))+"</mark>";
+    cursor=end;
+  }
+  return out+esc(text.slice(cursor));
 }
 function renderSearchSummary(q,list){
   const el=document.querySelector("#searchSummary");if(!el)return;
@@ -173,6 +207,34 @@ function renderSearchSummary(q,list){
   const sortText=sort&&sort.value!=="default"?" · "+esc(sort.options[sort.selectedIndex].text):"";
   el.classList.remove("hidden");
   el.innerHTML='<span>'+prefix+'显示 <strong>'+list.length+'</strong> 件'+filter+odorText+sortText+'</span>'+(chips?'<span class="summary-cats">'+chips+'</span>':"");
+}
+function looseSearchScore(x,q){
+  const words=searchTokens(q);
+  const fields=[x.t,x.q,x.s,x.c,x.l,x.n];
+  let score=0;
+  for(const word of words){
+    const best=fields.reduce((max,value)=>{
+      const text=normalizeSearch(value).toLowerCase();
+      if(!text)return max;
+      if(text===word)return Math.max(max,9);
+      if(text.includes(word))return Math.max(max,6);
+      return max;
+    },0);
+    score+=best;
+  }
+  return score;
+}
+function renderEmptyState(q,list){
+  if(list.length)return "";
+  if(!q)return '<div class="empty-results"><div class="empty-title">🗿 当前筛选下没有展品</div><div class="empty-tip">换个臭度、分类或排序条件试试。</div></div>';
+  const candidates=items.map((x,i)=>({x,i,score:looseSearchScore(x,q)}))
+    .filter(v=>v.score>0)
+    .sort((a,b)=>b.score-a.score||a.i-b.i)
+    .slice(0,3);
+  const suggestions=candidates.length
+    ? '<div class="empty-suggestions">'+candidates.map(v=>'<button class="empty-suggestion" data-suggest-i="'+v.i+'"><span>💩</span><span><strong>'+esc(v.x.t)+'</strong><small>'+esc(v.x.c)+' · '+esc(odorInfo(v.x).name)+'</small></span><span>查看 →</span></button>').join("")+'</div>'
+    : '<div class="empty-tip">试试删掉一个关键词，或者换个更具体的词。</div>';
+  return '<div class="empty-results"><div class="empty-title">🔎 暂无匹配</div><div class="empty-tip">没有找到完全符合的馆藏，下面给你捞几坨可能相关的：</div>'+suggestions+'</div>';
 }
 
 function getVisibleItems(q){
@@ -190,7 +252,7 @@ function render(){
   const list=getVisibleItems(q);
   renderSearchSummary(q,list);
   grid.innerHTML=list.map(x=>{const i=items.indexOf(x),fav=isFavorite(x);return '<article class="card" data-i="'+i+'">'+mediaHtml(i)+'<div class="card-top"><span class="tag '+cls(x.c)+'">'+esc(x.c)+" · "+esc(x.l)+'</span><button class="fav-card '+(fav?"on":"")+'" data-fav="'+i+'" title="'+(fav?"取消收藏":"收藏")+'">'+(fav?"★":"☆")+'</button></div><h2>'+highlightText(x.t,q)+'</h2><div class="quote">“'+highlightText(x.q,q)+'”</div>'+odorHtml(x)+'<div class="meta"><span>'+esc(x.s)+'</span><span>'+i18nMeta(x)+'</span></div></article>'}).join("");
-  document.querySelector("#empty").classList.toggle("hidden",list.length>0);document.querySelector("#totalCount").textContent=items.length;document.querySelector("#categoryCount").textContent=cats.length-1;
+  const empty=document.querySelector("#empty");empty.classList.toggle("hidden",list.length>0);empty.innerHTML=renderEmptyState(q,list);empty.querySelectorAll("[data-suggest-i]").forEach(b=>b.onclick=e=>{e.stopPropagation();detail(items[Number(b.dataset.suggestI)])});document.querySelector("#totalCount").textContent=items.length;document.querySelector("#categoryCount").textContent=cats.length-1;const collectionCount=document.querySelector("#collectionCount");if(collectionCount)collectionCount.textContent=items.filter(x=>odorInfo(x).score===6).length;
   grid.querySelectorAll(".card").forEach(el=>el.onclick=()=>detail(items[Number(el.dataset.i)]));
   grid.querySelectorAll(".fav-card").forEach(b=>b.onclick=e=>{e.stopPropagation();const x=items[Number(b.dataset.fav)],on=setFavorite(x,!isFavorite(x));b.classList.toggle("on",on);b.textContent=on?"★":"☆"});
   updateFavoriteCount();observeMedia();
