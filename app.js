@@ -51,10 +51,14 @@ async function commonsImage(x){
   const key=x.t+"|"+x.q;if(imageCache.has(key))return imageCache.get(key);if(imagePending.has(key))return imagePending.get(key);
   const promise=(async()=>{try{
     const variants=imageQueryVariants(x);if(!variants.length){imageCache.set(key,null);return null}
+    const ranked=[];
     for(const v of variants){
       const data=await commonsSearch(v,x);
-      if(data&&scoreCandidate(data,v,x)>1){imageCache.set(key,data);return data}
+      if(data)ranked.push({data,score:scoreCandidate(data,v,x)});
     }
+    ranked.sort((a,b)=>b.score-a.score);
+    const best=ranked[0];
+    if(best&&best.score>1){imageCache.set(key,best.data);return best.data}
     imageCache.set(key,null);return null;
   }catch(e){imageCache.set(key,null);return null}finally{imagePending.delete(key)}})();
   imagePending.set(key,promise);return promise;
@@ -150,25 +154,48 @@ function searchResults(q){
   if(!needle)return list.map(x=>({x,score:0}));
   return list.map(x=>({x,score:searchScore(x,needle)})).filter(v=>v.score>0).sort((a,b)=>b.score-a.score||items.indexOf(a.x)-items.indexOf(b.x));
 }
+function highlightText(value,q){
+  const text=String(value??""),needle=normalizeSearch(q);
+  if(!needle)return esc(text);
+  const lower=text.toLowerCase(),n=needle.toLowerCase(),at=lower.indexOf(n);
+  if(at<0)return esc(text);
+  return esc(text.slice(0,at))+'<mark class="search-hit">'+esc(text.slice(at,at+needle.length))+"</mark>"+esc(text.slice(at+needle.length));
+}
 function renderSearchSummary(q,list){
   const el=document.querySelector("#searchSummary");if(!el)return;
-  if(!q){el.classList.add("hidden");el.innerHTML="";return}
+  const sort=document.querySelector("#sortSelect"),odor=document.querySelector("#odorSelect");
+  if(!q&&active==="全部"&&(!odor||odor.value==="all")&&(!sort||sort.value==="default")){el.classList.add("hidden");el.innerHTML="";return}
   const counts={};list.forEach(x=>counts[x.c]=(counts[x.c]||0)+1);
-  const cats=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([name,n])=>'<span class="summary-cat">'+esc(name)+' '+n+'</span>').join("");
+  const chips=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,4).map(([name,n])=>'<span class="summary-cat">'+esc(name)+' '+n+'</span>').join("");
+  const prefix=q?'🔎 “<strong>'+esc(q)+'</strong>” · ':"";
+  const filter=active!=="全部"?"分类："+esc(active):"";
+  const odorText=odor&&odor.value!=="all"?(filter?" · ":"")+"臭度："+esc(odor.options[odor.selectedIndex].text):"";
+  const sortText=sort&&sort.value!=="default"?" · "+esc(sort.options[sort.selectedIndex].text):"";
   el.classList.remove("hidden");
-  el.innerHTML='<span>🔎 搜索“<strong>'+esc(q)+'</strong>”找到 <strong>'+list.length+'</strong> 件'+(active==="全部"?"":" · 当前分类："+esc(active))+'</span>'+(cats?'<span class="summary-cats">'+cats+'</span>':"");
+  el.innerHTML='<span>'+prefix+'显示 <strong>'+list.length+'</strong> 件'+filter+odorText+sortText+'</span>'+(chips?'<span class="summary-cats">'+chips+'</span>':"");
 }
 
+function getVisibleItems(q){
+  let list=searchResults(q).map(v=>v.x);
+  const odor=document.querySelector("#odorSelect"),sort=document.querySelector("#sortSelect");
+  if(odor&&odor.value!=="all")list=list.filter(x=>String(odorInfo(x).score)===odor.value);
+  const mode=sort?sort.value:"default";
+  if(mode==="odor-desc")list=[...list].sort((a,b)=>odorInfo(b).score-odorInfo(a).score||items.indexOf(a)-items.indexOf(b));
+  else if(mode==="odor-asc")list=[...list].sort((a,b)=>odorInfo(a).score-odorInfo(b).score||items.indexOf(a)-items.indexOf(b));
+  else if(mode==="title-asc")list=[...list].sort((a,b)=>String(a.t).localeCompare(String(b.t),"zh-Hans"));
+  return list;
+}
 function render(){
   const q=normalizeSearch(input.value);
-  const results=searchResults(q),list=results.map(v=>v.x);
+  const list=getVisibleItems(q);
   renderSearchSummary(q,list);
-  grid.innerHTML=list.map(x=>{const i=items.indexOf(x),fav=isFavorite(x);return '<article class="card" data-i="'+i+'">'+mediaHtml(i)+'<div class="card-top"><span class="tag '+cls(x.c)+'">'+esc(x.c)+" · "+esc(x.l)+'</span><button class="fav-card '+(fav?"on":"")+'" data-fav="'+i+'" title="'+(fav?"取消收藏":"收藏")+'">'+(fav?"★":"☆")+'</button></div><h2>'+esc(x.t)+'</h2><div class="quote">“'+esc(x.q)+'”</div>'+odorHtml(x)+'<div class="meta"><span>'+esc(x.s)+'</span><span>'+i18nMeta(x)+'</span></div></article>'}).join("");
+  grid.innerHTML=list.map(x=>{const i=items.indexOf(x),fav=isFavorite(x);return '<article class="card" data-i="'+i+'">'+mediaHtml(i)+'<div class="card-top"><span class="tag '+cls(x.c)+'">'+esc(x.c)+" · "+esc(x.l)+'</span><button class="fav-card '+(fav?"on":"")+'" data-fav="'+i+'" title="'+(fav?"取消收藏":"收藏")+'">'+(fav?"★":"☆")+'</button></div><h2>'+highlightText(x.t,q)+'</h2><div class="quote">“'+highlightText(x.q,q)+'”</div>'+odorHtml(x)+'<div class="meta"><span>'+esc(x.s)+'</span><span>'+i18nMeta(x)+'</span></div></article>'}).join("");
   document.querySelector("#empty").classList.toggle("hidden",list.length>0);document.querySelector("#totalCount").textContent=items.length;document.querySelector("#categoryCount").textContent=cats.length-1;
   grid.querySelectorAll(".card").forEach(el=>el.onclick=()=>detail(items[Number(el.dataset.i)]));
   grid.querySelectorAll(".fav-card").forEach(b=>b.onclick=e=>{e.stopPropagation();const x=items[Number(b.dataset.fav)],on=setFavorite(x,!isFavorite(x));b.classList.toggle("on",on);b.textContent=on?"★":"☆"});
   updateFavoriteCount();observeMedia();
 }
+
 function i18nMeta(x){return isFavorite(x)?"⭐ 已收藏 · 查看 →":"查看 →"}
 async function detail(x,pushUrl=true){
   touchRecent(x);
@@ -186,6 +213,8 @@ async function detail(x,pushUrl=true){
 nav.innerHTML=cats.map(c=>'<button class="category '+(c===active?"active":"")+'" data-c="'+esc(c)+'">'+esc(c)+"</button>").join("");
 nav.querySelectorAll("button").forEach(b=>b.onclick=()=>{active=b.dataset.c;nav.querySelectorAll("button").forEach(x=>x.classList.toggle("active",x===b));render()});
 input.oninput=render;
+document.querySelector("#sortSelect").onchange=render;
+document.querySelector("#odorSelect").onchange=render;
 document.querySelector("#randomBtn").onclick=()=>detail(items[Math.floor(Math.random()*items.length)]);
 document.querySelector("#closeDialog").onclick=()=>{document.querySelector("#detailDialog").close();const u=new URL(location.href);u.searchParams.delete("id");history.replaceState({},"",u.toString())};
 window.addEventListener("popstate",openById);
