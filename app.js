@@ -62,20 +62,45 @@ async function fillMedia(el,x){if(!el||el.dataset.loaded)return;const data=await
   el.innerHTML='<a class="media-link" href="'+data.original+'" target="_blank" rel="noopener"><img loading="lazy" src="'+data.thumb+'" alt="'+esc(x.t)+'"></a><div class="media-credit">Wikimedia Commons · '+esc(data.license)+'</div>'}
 function observeMedia(){const els=[...document.querySelectorAll("[data-media]")];if(!els.length)return;if(!("IntersectionObserver" in window)){els.slice(0,18).forEach(el=>fillMedia(el,items[Number(el.dataset.media)]));return}
   const io=new IntersectionObserver(entries=>{entries.filter(e=>e.isIntersecting).forEach(e=>{const el=e.target;io.unobserve(el);fillMedia(el,items[Number(el.dataset.media)])})},{rootMargin:"700px"});els.forEach(el=>io.observe(el))}
+const FAVORITES_KEY="internet-trash-favorites";
+function itemId(x){let s=(x.c+"|"+x.t+"|"+x.q).normalize("NFKC"),h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return "it-"+(h>>>0).toString(36)}
+function getFavorites(){try{return JSON.parse(localStorage.getItem(FAVORITES_KEY)||"[]")}catch(e){return []}}
+function isFavorite(x){return getFavorites().includes(itemId(x))}
+function setFavorite(x,on){const a=getFavorites(),id=itemId(x),next=on?[...new Set([...a,id])]:a.filter(v=>v!==id);localStorage.setItem(FAVORITES_KEY,JSON.stringify(next));updateFavoriteCount();return on}
+function updateFavoriteCount(){const n=getFavorites().length;const el=document.querySelector("#favoriteCount");if(el)el.textContent=n}
+function updateUrl(x){const url=new URL(location.href);url.searchParams.set("id",itemId(x));history.replaceState({id:itemId(x)},"",url)}
+function shareItem(x){const url=new URL(location.href);url.searchParams.set("id",itemId(x));const text="💩 "+x.t+"\n"+x.q+"\n互联网臭狗屎博物馆";if(navigator.share){navigator.share({title:"互联网臭狗屎博物馆 · "+x.t,text,url:url.toString()}).catch(()=>{})}else if(navigator.clipboard){navigator.clipboard.writeText(url.toString()).then(()=>{const b=document.querySelector("#shareBtn");if(b){const old=b.textContent;b.textContent="✅ 链接已复制";setTimeout(()=>b.textContent=old,1400)}})}else{prompt("复制这条展品链接：",url.toString())}}
+function openById(){const id=new URLSearchParams(location.search).get("id");if(!id)return;const x=items.find(v=>itemId(v)===id);if(x)detail(x,false)}
+
 function render(){
   const q=input.value.trim().toLowerCase();const list=items.filter(x=>(active==="全部"||x.c===active)&&(!q||(x.t+x.q+x.s+x.c+x.n).toLowerCase().includes(q)));
-  grid.innerHTML=list.map(x=>'<article class="card" data-i="'+items.indexOf(x)+'">'+mediaHtml(items.indexOf(x))+'<span class="tag '+cls(x.c)+'">'+esc(x.c)+" · "+esc(x.l)+'</span><h2>'+esc(x.t)+'</h2><div class="quote">“'+esc(x.q)+'”</div><div class="meta"><span>'+esc(x.s)+'</span><span>查看 →</span></div></article>').join("");
-  document.querySelector("#empty").classList.toggle("hidden",list.length>0);document.querySelector("#totalCount").textContent=items.length;document.querySelector("#categoryCount").textContent=cats.length-1;grid.querySelectorAll(".card").forEach(el=>el.onclick=()=>detail(items[Number(el.dataset.i)]));observeMedia();
+  grid.innerHTML=list.map(x=>{const i=items.indexOf(x),fav=isFavorite(x);return '<article class="card" data-i="'+i+'">'+mediaHtml(i)+'<div class="card-top"><span class="tag '+cls(x.c)+'">'+esc(x.c)+" · "+esc(x.l)+'</span><button class="fav-card '+(fav?"on":"")+'" data-fav="'+i+'" title="'+(fav?"取消收藏":"收藏")+'">'+(fav?"★":"☆")+'</button></div><h2>'+esc(x.t)+'</h2><div class="quote">“'+esc(x.q)+'”</div><div class="meta"><span>'+esc(x.s)+'</span><span>'+i18nMeta(x)+'</span></div></article>'}).join("");
+  document.querySelector("#empty").classList.toggle("hidden",list.length>0);document.querySelector("#totalCount").textContent=items.length;document.querySelector("#categoryCount").textContent=cats.length-1;
+  grid.querySelectorAll(".card").forEach(el=>el.onclick=()=>detail(items[Number(el.dataset.i)]));
+  grid.querySelectorAll(".fav-card").forEach(b=>b.onclick=e=>{e.stopPropagation();const x=items[Number(b.dataset.fav)],on=setFavorite(x,!isFavorite(x));b.classList.toggle("on",on);b.textContent=on?"★":"☆"});
+  updateFavoriteCount();observeMedia();
 }
-async function detail(x){
-  document.querySelector("#detailContent").innerHTML='<span class="tag '+cls(x.c)+'">'+esc(x.c)+" · "+esc(x.l)+'</span><h2>'+esc(x.t)+'</h2>'+mediaHtml(items.indexOf(x),"detail")+'<div class="quote">“'+esc(x.q)+'”</div><p>'+esc(x.n)+'</p><p>来源：'+esc(x.s)+'</p><div id="imageMeta" class="image-meta">🖼️ 正在查询原图与许可信息…</div><p><a href="'+esc(x.u)+'" target="_blank" rel="noopener">打开原始资料 ↗</a></p>';
-  document.querySelector("#detailDialog").showModal();const media=document.querySelector('#detailContent [data-media]'),metaBox=document.querySelector("#imageMeta");const data=await commonsImage(x);if(!media||!metaBox)return;
+function i18nMeta(x){return isFavorite(x)?"⭐ 已收藏 · 查看 →":"查看 →"}
+async function detail(x,pushUrl=true){
+  if(pushUrl)updateUrl(x);
+  const i=items.indexOf(x),fav=isFavorite(x),id=itemId(x);
+  document.querySelector("#detailContent").innerHTML='<div class="detail-head"><span class="tag '+cls(x.c)+'">'+esc(x.c)+" · "+esc(x.l)+'</span><div class="detail-actions"><button id="favBtn" class="detail-action '+(fav?"on":"")+'">'+(fav?"★ 已收藏":"☆ 收藏")+'</button><button id="shareBtn" class="detail-action">🔗 分享这坨</button></div></div><h2>'+esc(x.t)+'</h2>'+mediaHtml(i,"detail")+'<div class="quote">“'+esc(x.q)+'”</div><section class="dossier"><div class="dossier-title">🏷️ 馆藏档案</div><dl><div><dt>馆藏编号</dt><dd>'+esc(id)+'</dd></div><div><dt>分类</dt><dd>'+esc(x.c)+'</dd></div><div><dt>臭度标签</dt><dd>'+esc(x.l)+'</dd></div><div><dt>资料来源</dt><dd>'+esc(x.s)+'</dd></div><div><dt>原始语句</dt><dd>'+esc(x.q)+'</dd></div><div><dt>考古备注</dt><dd>'+esc(x.n)+'</dd></div></dl></section><div class="image-meta" id="imageMeta">🖼️ 正在查询原图与许可信息…</div><p><a href="'+esc(x.u)+'" target="_blank" rel="noopener">打开原始资料 ↗</a></p>';
+  document.querySelector("#detailDialog").showModal();
+  document.querySelector("#favBtn").onclick=()=>{const on=setFavorite(x,!isFavorite(x));document.querySelector("#favBtn").classList.toggle("on",on);document.querySelector("#favBtn").textContent=on?"★ 已收藏":"☆ 收藏";render()};
+  document.querySelector("#shareBtn").onclick=()=>shareItem(x);
+  const media=document.querySelector('#detailContent [data-media]'),metaBox=document.querySelector("#imageMeta");const data=await commonsImage(x);if(!media||!metaBox)return;
   if(!data){media.classList.remove("media-loading");media.innerHTML='<div class="media-placeholder no-image">🗿 图片考古结果：驴头不对马嘴，暂不自动配图<br><a href="https://commons.wikimedia.org/w/index.php?search='+encodeURIComponent(x.t)+'&title=Special:MediaSearch&type=image" target="_blank" rel="noopener">去 Commons 手动找原图 ↗</a></div>';metaBox.textContent="未找到足够可信的 Commons 图片匹配。";return}
   media.classList.remove("media-loading");media.dataset.loaded="1";media.innerHTML='<a class="media-link" href="'+data.original+'" target="_blank" rel="noopener"><img src="'+data.thumb+'" alt="'+esc(x.t)+'"></a><div class="media-credit">Wikimedia Commons · '+esc(data.license)+'</div>';metaBox.innerHTML='许可：<strong>'+esc(data.license)+'</strong>'+(data.artist?" · 作者/署名："+esc(data.artist):"")+' · 搜索词：'+esc(data.query)+' · <a href="'+esc(data.page)+'" target="_blank" rel="noopener">打开文件页 ↗</a>';
 }
+
 nav.innerHTML=cats.map(c=>'<button class="category '+(c===active?"active":"")+'" data-c="'+esc(c)+'">'+esc(c)+"</button>").join("");
 nav.querySelectorAll("button").forEach(b=>b.onclick=()=>{active=b.dataset.c;nav.querySelectorAll("button").forEach(x=>x.classList.toggle("active",x===b));render()});
 input.oninput=render;
 document.querySelector("#randomBtn").onclick=()=>detail(items[Math.floor(Math.random()*items.length)]);
-document.querySelector("#closeDialog").onclick=()=>document.querySelector("#detailDialog").close();
-render();
+document.querySelector("#closeDialog").onclick=()=>{document.querySelector("#detailDialog").close();const u=new URL(location.href);u.searchParams.delete("id");history.replaceState({},"",u.toString())};
+window.addEventListener("popstate",openById);
+document.querySelector("#favoriteBtn").onclick=()=>{const dialog=document.querySelector("#favoriteDialog");dialog.showModal();renderFavorites();};
+document.querySelector("#closeFavorites").onclick=()=>document.querySelector("#favoriteDialog").close();
+document.querySelector("#favoriteList").onclick=e=>{const row=e.target.closest("[data-fav-item]");if(row){document.querySelector("#favoriteDialog").close();detail(items.find(x=>itemId(x)===row.dataset.favItem))}};
+function renderFavorites(){const ids=getFavorites();const el=document.querySelector("#favoriteList");el.innerHTML=ids.length?ids.map(id=>{const x=items.find(v=>itemId(v)===id);return x?'<button class="favorite-row" data-fav-item="'+id+'"><span>💩</span><span><strong>'+esc(x.t)+'</strong><small>'+esc(x.c)+" · "+esc(x.l)+'</small></span><span>查看 →</span></button>':""}).join(""):'<div class="favorite-empty">🗿 还没有收藏任何一坨。</div>'}
+render();updateFavoriteCount();setTimeout(openById,0);
