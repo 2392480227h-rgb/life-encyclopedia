@@ -6,6 +6,9 @@ on:
       - main
     paths:
       - "docs/**"
+      - "index.html"
+      - "style.css"
+      - "app.js"
       - ".github/workflows/deploy-pages.yml"
   workflow_dispatch:
 
