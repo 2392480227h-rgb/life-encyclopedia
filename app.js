@@ -34,4 +34,15 @@ nav.querySelectorAll("button").forEach(b=>b.onclick=()=>{active=b.dataset.c;nav.
 input.oninput=render;
 document.querySelector("#randomBtn").onclick=()=>detail(items[Math.floor(Math.random()*items.length)]);
 document.querySelector("#closeDialog").onclick=()=>document.querySelector("#detailDialog").close();
-render();
+render(),
+{c:"简中互联网",l:"抽象文化",t:"NMSL：一个缩写的互联网史",q:"NMSL",s:"The China Project · 中文互联网俚语考古",u:"https://thechinaproject.com/2020/04/23/nmsl-the-origins-of-the-chinese-internet-slang/",n:"相关报道将NMSL的流行与早期直播、抽象文化传播联系起来。后来它从直播圈黑话扩散成更广泛的中文互联网表达。"},
+{c:"极臭",l:"极臭",t:"你在赣神魔？",q:"你在赣神魔？",s:"澎湃新闻 · 抽象文化考古",u:"https://www.thepaper.cn/newsDetail_forward_29356506",n:"四川方言式表达进入直播黑话体系后，被大量二创和模仿，成为抽象文化早期具有辨识度的句式。"},
+{c:"逆天发言",l:"逆天",t:"gkd / gck / 带哥",q:"gkd！gkd！",s:"澎湃新闻 · 抽象话考古",u:"https://www.thepaper.cn/newsDetail_forward_29356506",n:"抽象话大量吸收四川方言、拆字、拼音缩写和Emoji，形成一套熟人语境下的信息压缩系统。"},
+{c:"恶臭",l:"恶臭",t:"抽象工作室黑话",q:"女子口巴",s:"澎湃新闻 · 抽象文化考古",u:"https://www.thepaper.cn/newsDetail_forward_29356506",n:"“女子口巴”等拆字写法属于抽象话常见构造方式，把普通词语故意改造成需要圈内语境才能迅速理解的写法。"},
+{c:"简中互联网",l:"恶臭",t:"嗨粉：把热点变成孙笑川宇宙",q:"嫌疑人找到了：@带带大师兄",s:"The China Project · 中文互联网俚语考古",u:"https://thechinaproject.com/2020/04/23/nmsl-the-origins-of-the-chinese-internet-slang/",n:"相关报道记录了粉丝把无关案件和热点故意嫁接到孙笑川账号上的玩法。这种“万能背锅”式恶搞后来成为人物迷因的一部分。"},
+{c:"极臭",l:"极臭",t:"东百往事：二次元经典老番",q:"经典老番，建议观看",s:"东百往事 · 迷因考古",u:"https://moegirl.icu/%E8%BF%99%E4%BD%8D%E6%9B%B4%E6%98%AF%E4%B8%AA%E5%AF%84%E5%90%A7",n:"东百往事早期被搬到B站时被加上“二次元”“经典老番”等戏谑标签，后来反而成为固定梗。"},
+{c:"逆天发言",l:"逆天",t:"东百往事三部曲",q:"虎哥大战杀马特",s:"东百往事 · 迷因考古",u:"https://zh.wikipedia.org/wiki/%E4%B8%9C%E7%99%BE%E5%BE%80%E4%BA%8B",n:"资料通常把虎哥大战杀马特作为最知名主线，部分合集还会加入虎哥大战赵三金、虎哥追求彪姐等内容。"},
+{c:"黑色幽默",l:"恶臭",t:"平台越删，二创越多",q:"删了又传，传了又删",s:"东百往事 · 亚文化研究",u:"https://zh.wikipedia.org/wiki/%E4%B8%9C%E7%99%BE%E5%BE%80%E4%BA%8B",n:"公开资料提到相关视频反复被下架、重新上传，二创者又通过剪辑、谐音和再包装延续传播。"},
+{c:"极臭",l:"极臭",t:"沈阳大街：从路口变成圣地",q:"沈阳大街",s:"东百往事 · 地点考古",u:"https://zh.wikipedia.org/wiki/%E4%B8%9C%E7%99%BE%E5%BE%80%E4%BA%8B",n:"资料指出“沈阳大街”并非正式地名，而是东百往事相关视频拍摄地点形成的网络称呼，后来被二创文化赋予“圣地”意义。"},
+{c:"简中互联网",l:"恶臭",t:"抽象文化的自我复制",q:"从一个梗长出一万个梗",s:"澎湃新闻 · 抽象文化考古",u:"https://www.thepaper.cn/newsDetail_forward_29356506",n:"澎湃新闻梳理了抽象文化从直播黑话到B站鬼畜、短视频和各种“×学”的扩散过程，呈现出典型的再加工和自我复制。"}
+;
