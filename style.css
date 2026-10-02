@@ -28,3 +28,38 @@
 }
 
 .search-hit{padding:0 2px;border-radius:4px;background:#d8ff69;color:#111;font-weight:800}.view-controls{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap;margin:-6px 0 20px}.view-controls label{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:12px}.view-controls select{border:1px solid var(--line);background:var(--panel);color:#fff;border-radius:10px;padding:9px 30px 9px 11px;outline:0}.search-summary strong{font-weight:800}@media(max-width:600px){.view-controls{justify-content:stretch;margin:-4px 0 18px}.view-controls label{flex:1}.view-controls select{width:100%;min-width:0}}.hero .stats{max-width:720px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:28px}.hero .stat{min-width:0;padding:12px 14px;border:1px solid rgba(255,255,255,.08);border-radius:14px;background:rgba(12,14,18,.55);box-shadow:0 10px 30px rgba(0,0,0,.16)}.hero .stat b{display:block;font-size:26px;line-height:1.1;color:#fff}.hero .stat span{display:block;color:var(--muted);font-size:12px;margin-top:5px}.hero-foot{display:flex;gap:9px;flex-wrap:wrap;margin-top:13px;color:#747c88;font-size:11px;letter-spacing:.03em}.hero-foot span{padding:5px 9px;border:1px solid #252a31;border-radius:999px;background:rgba(18,20,25,.58)}.empty-results{max-width:760px;margin:0 auto}.empty-title{font-size:20px;color:#dfe3e9;font-weight:800}.empty-tip{margin-top:6px;color:#737a86}.empty-suggestions{display:grid;gap:8px;margin-top:16px;text-align:left}.empty-suggestion{width:100%;display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:10px;align-items:center;border:1px solid #2a2e36;background:#101217;color:#fff;border-radius:12px;padding:11px 12px;cursor:pointer;text-align:left}.empty-suggestion:hover{border-color:#59616e;transform:translateY(-1px)}.empty-suggestion strong,.empty-suggestion small{display:block}.empty-suggestion small{color:#7f8793;font-size:11px;margin-top:2px}.empty-suggestion span:last-child{color:#aeb5c0;font-size:12px}@media(max-width:600px){.hero .stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.hero .stat{padding:11px 12px}.hero .stat b{font-size:23px}.hero-foot{line-height:1.4}.empty-suggestion{grid-template-columns:24px minmax(0,1fr) 52px}}
+
+/* 第三轮：筛选控制台、馆藏卡片与移动端详情细节 */
+.view-panel{margin:-4px 0 20px;padding:10px;border:1px solid var(--line);border-radius:16px;background:rgba(16,18,23,.72);box-shadow:0 10px 28px rgba(0,0,0,.12)}
+.view-controls-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:1px 3px 9px;color:#b8c0cb;font-size:12px;font-weight:800}
+.filter-reset{border:1px solid #2c3139;background:#15181d;color:#9ea6b2;border-radius:999px;padding:5px 9px;font-size:11px;cursor:pointer}
+.filter-reset:hover{border-color:#59616e;color:#fff}
+.view-panel .view-controls{margin:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;justify-content:stretch}
+.view-panel .view-controls label{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:8px;padding:8px 9px;border:1px solid #272c34;border-radius:11px;background:#0f1115;color:#7f8793}
+.view-panel .view-controls label>span{font-size:11px;white-space:nowrap}
+.view-panel .view-controls select{width:100%;min-width:0;padding:8px 28px 8px 9px}
+.card{box-shadow:0 12px 30px rgba(0,0,0,.14)}
+.card-top{min-height:34px}
+.card-top .tag{max-width:calc(100% - 44px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card h2{margin:14px 0 0;font-size:20px;line-height:1.32;letter-spacing:-.01em}
+.card .quote{margin:11px 0 10px}
+.card .odor{margin-top:0}
+.card .meta{gap:12px;margin-top:12px;align-items:flex-end}
+.card .meta span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card .meta span:last-child{white-space:nowrap}
+.card:active{transform:translateY(-1px)}
+.detail h2{margin:14px 0 18px;line-height:1.25;letter-spacing:-.01em}
+@media(max-width:600px){
+  .view-panel{margin:-4px 0 18px;padding:9px}
+  .view-controls-head{padding:0 2px 8px}
+  .view-panel .view-controls{grid-template-columns:1fr 1fr;gap:8px}
+  .view-panel .view-controls label{grid-template-columns:1fr;gap:4px;padding:8px}
+  .view-panel .view-controls label>span{font-size:10px}
+  .view-panel .view-controls select{padding:8px 26px 8px 8px}
+  .card{padding:17px;border-radius:16px;box-shadow:0 10px 24px rgba(0,0,0,.12)}
+  .card h2{font-size:19px;margin-top:12px}
+  .card .meta{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;margin-top:11px}
+  .detail h2{font-size:25px;margin-top:12px}
+  .detail-actions{padding-right:0}
+  .detail-action{min-height:40px}
+}

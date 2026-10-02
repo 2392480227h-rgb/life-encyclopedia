@@ -277,6 +277,7 @@ nav.querySelectorAll("button").forEach(b=>b.onclick=()=>{active=b.dataset.c;nav.
 input.oninput=render;
 document.querySelector("#sortSelect").onchange=render;
 document.querySelector("#odorSelect").onchange=render;
+document.querySelector("#resetFilters").onclick=()=>{document.querySelector("#sortSelect").value="default";document.querySelector("#odorSelect").value="all";render()};
 document.querySelector("#randomBtn").onclick=()=>detail(items[Math.floor(Math.random()*items.length)]);
 document.querySelector("#closeDialog").onclick=()=>{document.querySelector("#detailDialog").close();const u=new URL(location.href);u.searchParams.delete("id");history.replaceState({},"",u.toString())};
 window.addEventListener("popstate",openById);
