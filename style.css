@@ -18,3 +18,11 @@
 
 /* 移动端详情页关闭按钮向内收，避免与分享按钮贴边 */
 @media(max-width:600px){.close{right:28px!important;}}
+
+/* 移动端详情页：操作按钮独立成行，彻底避开右上角关闭按钮 */
+@media(max-width:600px){
+  .detail-head{display:block;padding-top:34px;}
+  .detail-actions{display:flex;justify-content:flex-start;gap:8px;margin-top:14px;padding-right:52px;}
+  .detail-action{flex:0 0 auto;}
+  .close{right:10px!important;top:10px!important;}
+}
