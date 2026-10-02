@@ -55,7 +55,7 @@ async function commonsImage(x){
   }catch(e){imageCache.set(key,null);return null}finally{imagePending.delete(key)}})();
   imagePending.set(key,promise);return promise;
 }
-function mediaHtml(i,kind){const k=kind||"card";return '<div class="'+k+'-media media-loading" data-media="'+i+'"><div class="media-placeholder">🖼️ 图片考古中…</div></div>'}
+function mediaHtml(i,kind){const k=kind||"card";const box=k==="detail"?"detail-media":"media";return '<div class="'+box+' media-loading" data-media="'+i+'"><div class="media-placeholder">🖼️ 图片考古中…</div></div>'}
 function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
 async function fillMedia(el,x){if(!el||el.dataset.loaded)return;const data=await commonsImage(x);if(!el.isConnected)return;el.dataset.loaded="1";el.classList.remove("media-loading");
   if(!data){el.innerHTML='<div class="media-placeholder no-image">🗿 图片考古结果：驴头不对马嘴，暂不自动配图<br><a href="https://commons.wikimedia.org/w/index.php?search='+encodeURIComponent(x.t)+'&title=Special:MediaSearch&type=image" target="_blank" rel="noopener">手动去 Commons 找原图 ↗</a></div>';return}
