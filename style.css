@@ -15,3 +15,6 @@
 .detail-head{padding-top:42px;}
 .close{top:10px!important;right:10px!important;z-index:20!important;width:42px;height:42px;display:grid;place-items:center;padding:0!important;line-height:1!important;border:1px solid #303640!important;border-radius:12px!important;background:#15171c!important;color:#c7ccd5!important;font-size:30px!important;}
 @media(max-width:600px){.detail-head{padding-top:34px;}}
+
+/* 移动端详情页关闭按钮向内收，避免与分享按钮贴边 */
+@media(max-width:600px){.close{right:28px!important;}}
