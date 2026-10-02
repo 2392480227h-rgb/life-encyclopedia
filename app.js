@@ -72,9 +72,94 @@ function updateUrl(x){const url=new URL(location.href);url.searchParams.set("id"
 function shareItem(x){const url=new URL(location.href);url.searchParams.set("id",itemId(x));const text="💩 "+x.t+"\n"+x.q+"\n互联网臭狗屎博物馆";if(navigator.share){navigator.share({title:"互联网臭狗屎博物馆 · "+x.t,text,url:url.toString()}).catch(()=>{})}else if(navigator.clipboard){navigator.clipboard.writeText(url.toString()).then(()=>{const b=document.querySelector("#shareBtn");if(b){const old=b.textContent;b.textContent="✅ 链接已复制";setTimeout(()=>b.textContent=old,1400)}})}else{prompt("复制这条展品链接：",url.toString())}}
 function openById(){const id=new URLSearchParams(location.search).get("id");if(!id)return;const x=items.find(v=>itemId(v)===id);if(x)detail(x,false)}
 
+const RECENT_KEY="internet-trash-recent";
+const RECENT_LIMIT=12;
+
+const ODOR_LEVELS=[
+  {name:"轻度污染",score:1,emoji:"🟢"},
+  {name:"有点臭",score:2,emoji:"🟡"},
+  {name:"恶臭",score:3,emoji:"🟠"},
+  {name:"极臭",score:4,emoji:"🔴"},
+  {name:"逆天",score:5,emoji:"🟣"},
+  {name:"馆藏级污染",score:6,emoji:"🗿"}
+];
+function odorInfo(x){
+  const label=String(x.l||"");
+  if(label==="极臭")return ODOR_LEVELS[5];
+  if(label==="恶臭")return ODOR_LEVELS[3];
+  if(label==="逆天"||label.includes("蠢贼"))return ODOR_LEVELS[4];
+  if(label==="抽象")return ODOR_LEVELS[2];
+  if(label==="党争/蠢贼🗿")return ODOR_LEVELS[4];
+  if(x.c==="极臭")return ODOR_LEVELS[5];
+  if(x.c==="恶臭")return ODOR_LEVELS[3];
+  return ODOR_LEVELS[1];
+}
+function odorHtml(x,detail=false){
+  const o=odorInfo(x),dots="●".repeat(o.score)+"○".repeat(6-o.score);
+  if(detail)return '<section class="odor-meter"><div class="odor-meter-head"><span class="odor-title">'+o.emoji+" 臭度："+esc(o.name)+'</span><span class="odor-score">'+o.score+' / 6</span></div><div class="odor-bar" aria-label="臭度 '+o.score+' / 6"><div class="odor-fill" style="--odor-width:'+((o.score/6)*100)+'%"></div></div><div class="recent-note">本系统只用于馆内趣味分级，不代表事实判断或价值判断。</div></section>';
+  return '<span class="odor odor-'+o.score+'" title="臭度：'+esc(o.name)+'">'+o.emoji+' '+esc(o.name)+' <span class="odor-dots">'+dots+'</span></span>';
+}
+
+function getRecent(){
+  try{
+    const ids=JSON.parse(localStorage.getItem(RECENT_KEY)||"[]");
+    return Array.isArray(ids)?ids.filter(Boolean).slice(0,RECENT_LIMIT):[];
+  }catch(e){return []}
+}
+function touchRecent(x){
+  const id=itemId(x),ids=getRecent().filter(v=>v!==id);
+  localStorage.setItem(RECENT_KEY,JSON.stringify([id,...ids].slice(0,RECENT_LIMIT)));
+  updateRecentCount();
+}
+function updateRecentCount(){
+  const el=document.querySelector("#recentCount");if(el)el.textContent=getRecent().length;
+}
+function renderRecent(){
+  const ids=getRecent(),el=document.querySelector("#recentList");
+  el.innerHTML=ids.length?ids.map((id,idx)=>{
+    const x=items.find(v=>itemId(v)===id);
+    return x?'<button class="favorite-row" data-recent-item="'+id+'"><span>'+(idx+1)+'</span><span><strong>'+esc(x.t)+'</strong><small>'+esc(x.c)+' · '+esc(odorInfo(x).name)+'</small></span><span>查看 →</span></button>':"";
+  }).join(""):'<div class="favorite-empty">🗿 还没看过任何一坨。</div>';
+}
+
+function searchScore(x,q){
+  const needle=normalizeSearch(q).toLowerCase();if(!needle)return 0;
+  const id=itemId(x).toLowerCase();
+  const fields=[
+    [x.t,12],[x.q,10],[x.s,7],[x.c,6],[x.l,5],[x.n,4],[id,3]
+  ];
+  let score=0;
+  for(const [value,weight] of fields){
+    const text=normalizeSearch(value).toLowerCase();
+    if(!text)continue;
+    if(text===needle)score+=weight*2;
+    else if(text.startsWith(needle))score+=weight+3;
+    else if(text.includes(needle))score+=weight;
+    const words=needle.split(" ").filter(Boolean);
+    if(words.length>1&&words.every(w=>text.includes(w)))score+=Math.max(1,weight-2);
+  }
+  return score;
+}
+function searchResults(q){
+  const needle=normalizeSearch(q);
+  let list=items.filter(x=>active==="全部"||x.c===active);
+  if(!needle)return list.map(x=>({x,score:0}));
+  return list.map(x=>({x,score:searchScore(x,needle)})).filter(v=>v.score>0).sort((a,b)=>b.score-a.score||items.indexOf(a.x)-items.indexOf(b.x));
+}
+function renderSearchSummary(q,list){
+  const el=document.querySelector("#searchSummary");if(!el)return;
+  if(!q){el.classList.add("hidden");el.innerHTML="";return}
+  const counts={};list.forEach(x=>counts[x.c]=(counts[x.c]||0)+1);
+  const cats=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([name,n])=>'<span class="summary-cat">'+esc(name)+' '+n+'</span>').join("");
+  el.classList.remove("hidden");
+  el.innerHTML='<span>🔎 搜索“<strong>'+esc(q)+'</strong>”找到 <strong>'+list.length+'</strong> 件'+(active==="全部"?"":" · 当前分类："+esc(active))+'</span>'+(cats?'<span class="summary-cats">'+cats+'</span>':"");
+}
+
 function render(){
-  const q=input.value.trim().toLowerCase();const list=items.filter(x=>(active==="全部"||x.c===active)&&(!q||(x.t+x.q+x.s+x.c+x.n).toLowerCase().includes(q)));
-  grid.innerHTML=list.map(x=>{const i=items.indexOf(x),fav=isFavorite(x);return '<article class="card" data-i="'+i+'">'+mediaHtml(i)+'<div class="card-top"><span class="tag '+cls(x.c)+'">'+esc(x.c)+" · "+esc(x.l)+'</span><button class="fav-card '+(fav?"on":"")+'" data-fav="'+i+'" title="'+(fav?"取消收藏":"收藏")+'">'+(fav?"★":"☆")+'</button></div><h2>'+esc(x.t)+'</h2><div class="quote">“'+esc(x.q)+'”</div><div class="meta"><span>'+esc(x.s)+'</span><span>'+i18nMeta(x)+'</span></div></article>'}).join("");
+  const q=normalizeSearch(input.value);
+  const results=searchResults(q),list=results.map(v=>v.x);
+  renderSearchSummary(q,list);
+  grid.innerHTML=list.map(x=>{const i=items.indexOf(x),fav=isFavorite(x);return '<article class="card" data-i="'+i+'">'+mediaHtml(i)+'<div class="card-top"><span class="tag '+cls(x.c)+'">'+esc(x.c)+" · "+esc(x.l)+'</span><button class="fav-card '+(fav?"on":"")+'" data-fav="'+i+'" title="'+(fav?"取消收藏":"收藏")+'">'+(fav?"★":"☆")+'</button></div><h2>'+esc(x.t)+'</h2><div class="quote">“'+esc(x.q)+'”</div>'+odorHtml(x)+'<div class="meta"><span>'+esc(x.s)+'</span><span>'+i18nMeta(x)+'</span></div></article>'}).join("");
   document.querySelector("#empty").classList.toggle("hidden",list.length>0);document.querySelector("#totalCount").textContent=items.length;document.querySelector("#categoryCount").textContent=cats.length-1;
   grid.querySelectorAll(".card").forEach(el=>el.onclick=()=>detail(items[Number(el.dataset.i)]));
   grid.querySelectorAll(".fav-card").forEach(b=>b.onclick=e=>{e.stopPropagation();const x=items[Number(b.dataset.fav)],on=setFavorite(x,!isFavorite(x));b.classList.toggle("on",on);b.textContent=on?"★":"☆"});
@@ -82,9 +167,10 @@ function render(){
 }
 function i18nMeta(x){return isFavorite(x)?"⭐ 已收藏 · 查看 →":"查看 →"}
 async function detail(x,pushUrl=true){
+  touchRecent(x);
   if(pushUrl)updateUrl(x);
   const i=items.indexOf(x),fav=isFavorite(x),id=itemId(x);
-  document.querySelector("#detailContent").innerHTML='<div class="detail-head"><span class="tag '+cls(x.c)+'">'+esc(x.c)+" · "+esc(x.l)+'</span><div class="detail-actions"><button id="favBtn" class="detail-action '+(fav?"on":"")+'">'+(fav?"★ 已收藏":"☆ 收藏")+'</button><button id="shareBtn" class="detail-action">🔗 分享这坨</button></div></div><h2>'+esc(x.t)+'</h2>'+mediaHtml(i,"detail")+'<div class="quote">“'+esc(x.q)+'”</div><section class="dossier"><div class="dossier-title">🏷️ 馆藏档案</div><dl><div><dt>馆藏编号</dt><dd>'+esc(id)+'</dd></div><div><dt>分类</dt><dd>'+esc(x.c)+'</dd></div><div><dt>臭度标签</dt><dd>'+esc(x.l)+'</dd></div><div><dt>资料来源</dt><dd>'+esc(x.s)+'</dd></div><div><dt>原始语句</dt><dd>'+esc(x.q)+'</dd></div><div><dt>考古备注</dt><dd>'+esc(x.n)+'</dd></div></dl></section><div class="image-meta" id="imageMeta">🖼️ 正在查询原图与许可信息…</div><p><a href="'+esc(x.u)+'" target="_blank" rel="noopener">打开原始资料 ↗</a></p>';
+  document.querySelector("#detailContent").innerHTML='<div class="detail-head"><span class="tag '+cls(x.c)+'">'+esc(x.c)+" · "+esc(x.l)+'</span><div class="detail-actions"><button id="favBtn" class="detail-action '+(fav?"on":"")+'">'+(fav?"★ 已收藏":"☆ 收藏")+'</button><button id="shareBtn" class="detail-action">🔗 分享这坨</button></div></div><h2>'+esc(x.t)+'</h2>'+mediaHtml(i,"detail")+'<div class="quote">“'+esc(x.q)+'”</div>'+odorHtml(x,true)+'<section class="dossier"><div class="dossier-title">🏷️ 馆藏档案</div><dl><div><dt>馆藏编号</dt><dd>'+esc(id)+'</dd></div><div><dt>分类</dt><dd>'+esc(x.c)+'</dd></div><div><dt>臭度标签</dt><dd>'+esc(x.l)+'</dd></div><div><dt>资料来源</dt><dd>'+esc(x.s)+'</dd></div><div><dt>原始语句</dt><dd>'+esc(x.q)+'</dd></div><div><dt>考古备注</dt><dd>'+esc(x.n)+'</dd></div></dl></section><div class="image-meta" id="imageMeta">🖼️ 正在查询原图与许可信息…</div><p><a href="'+esc(x.u)+'" target="_blank" rel="noopener">打开原始资料 ↗</a></p>';
   document.querySelector("#detailDialog").showModal();
   document.querySelector("#favBtn").onclick=()=>{const on=setFavorite(x,!isFavorite(x));document.querySelector("#favBtn").classList.toggle("on",on);document.querySelector("#favBtn").textContent=on?"★ 已收藏":"☆ 收藏";render()};
   document.querySelector("#shareBtn").onclick=()=>shareItem(x);
@@ -100,7 +186,11 @@ document.querySelector("#randomBtn").onclick=()=>detail(items[Math.floor(Math.ra
 document.querySelector("#closeDialog").onclick=()=>{document.querySelector("#detailDialog").close();const u=new URL(location.href);u.searchParams.delete("id");history.replaceState({},"",u.toString())};
 window.addEventListener("popstate",openById);
 document.querySelector("#favoriteBtn").onclick=()=>{const dialog=document.querySelector("#favoriteDialog");dialog.showModal();renderFavorites();};
+document.querySelector("#recentBtn").onclick=()=>{const dialog=document.querySelector("#recentDialog");dialog.showModal();renderRecent();};
+document.querySelector("#closeRecent").onclick=()=>document.querySelector("#recentDialog").close();
+document.querySelector("#recentList").onclick=e=>{const row=e.target.closest("[data-recent-item]");if(row){document.querySelector("#recentDialog").close();const x=items.find(v=>itemId(v)===row.dataset.recentItem);if(x)detail(x)}};
+
 document.querySelector("#closeFavorites").onclick=()=>document.querySelector("#favoriteDialog").close();
 document.querySelector("#favoriteList").onclick=e=>{const row=e.target.closest("[data-fav-item]");if(row){document.querySelector("#favoriteDialog").close();detail(items.find(x=>itemId(x)===row.dataset.favItem))}};
 function renderFavorites(){const ids=getFavorites();const el=document.querySelector("#favoriteList");el.innerHTML=ids.length?ids.map(id=>{const x=items.find(v=>itemId(v)===id);return x?'<button class="favorite-row" data-fav-item="'+id+'"><span>💩</span><span><strong>'+esc(x.t)+'</strong><small>'+esc(x.c)+" · "+esc(x.l)+'</small></span><span>查看 →</span></button>':""}).join(""):'<div class="favorite-empty">🗿 还没有收藏任何一坨。</div>'}
-render();updateFavoriteCount();setTimeout(openById,0);
+render();updateFavoriteCount();updateRecentCount();setTimeout(openById,0);
