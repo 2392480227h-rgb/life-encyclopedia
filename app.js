@@ -26,16 +26,11 @@ function scoreCandidate(page,variant,x){
   const title=normalizeSearch(page.title||"").toLowerCase();
   const desc=normalizeSearch(page.description||"").toLowerCase();
   const v=normalizeSearch(variant).toLowerCase();
-  const stop=new Set(["the","and","for","you","are","this","that","with","from","meme","internet","image","images"]);
-  const words=[...new Set(v.split(" ").filter(w=>w.length>=3&&!stop.has(w)))];
-  const matched=words.filter(w=>title.includes(w));
+  const words=v.split(" ").filter(w=>w.length>=3&&!["the","and","for","you","are","this","that","with","from","meme","internet","image","images"].includes(w));
   let score=0;
   if(v&&title.includes(v))score+=30;
   for(const w of words){if(title.includes(w))score+=6;if(desc.includes(w))score+=1}
   if(/meme|reaction|gif|jpg|png/.test(title))score+=1;
-  const hinted=!!imageHints[x.t];
-  if(!hinted&&words.length>=2&&matched.length<words.length)score-=12;
-  if(!hinted&&words.length>=3&&matched.length<Math.ceil(words.length*.67))score-=8;
   if(/真实蠢贼|蠢贼新闻/.test(x.t))score-=20;
   return score;
 }
@@ -58,14 +53,7 @@ async function commonsImage(x){
     const variants=imageQueryVariants(x);if(!variants.length){imageCache.set(key,null);return null}
     for(const v of variants){
       const data=await commonsSearch(v,x);
-      if(!data)continue;
-      const score=scoreCandidate(data,v,x);
-      const hinted=!!imageHints[x.t];
-      const words=normalizeSearch(v).toLowerCase().split(" ").filter(w=>w.length>=3&&!["the","and","for","you","are","this","that","with","from","meme","internet","image","images"].includes(w));
-      const title=normalizeSearch(data.title||"").toLowerCase();
-      const matched=words.filter(w=>title.includes(w)).length;
-      const strong=score>= (hinted?8:18) && (words.length<2 || matched>= (hinted?1:words.length));
-      if(strong){imageCache.set(key,data);return data}
+      if(data&&scoreCandidate(data,v,x)>1){imageCache.set(key,data);return data}
     }
     imageCache.set(key,null);return null;
   }catch(e){imageCache.set(key,null);return null}finally{imagePending.delete(key)}})();
